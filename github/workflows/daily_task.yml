@@ -1,0 +1,29 @@
+name: Daily XCX Synergy
+
+on:
+schedule:
+- cron: '0 0 * * *' # 毎日日本時間午前9時に実行
+workflow_dispatch: # 手動実行も可能にする
+
+jobs:
+build:
+runs-on: ubuntu-latest
+steps:
+- name: Checkout code
+uses: actions/checkout@v2
+
+- name: Set up Python
+uses: actions/setup-python@v2
+with:
+python-version: '3.9'
+
+- name: Install dependencies
+run: pip install tweepy
+
+- name: Run Bot
+env:
+X_API_KEY: ${{ secrets.X_API_KEY }}
+X_API_SECRET: ${{ secrets.X_API_SECRET }}
+X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+run: python scripts/xcx_synergy_bot.py
