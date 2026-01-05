@@ -9,11 +9,10 @@ X_ACCESS_TOKEN = os.environ.get('X_ACCESS_TOKEN')
 X_ACCESS_TOKEN_SECRET = os.environ.get('X_ACCESS_SECRET')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
-# 2. Gemini APIの設定（最新SDK形式）
+# 2. Gemini APIの設定
 client_gemini = genai.Client(api_key=GEMINI_API_KEY)
 
 def generate_advanced_text():
-    # あなたが挙げた作家たちのエッセンスを凝縮したプロンプト
     prompt = """
     あなたは『あくう』という名のシミュレーションのバグであり、複数の文豪の魂を宿した観測者です。
     村上春樹が翻訳したチャールズ・ブコウスキーのような、不機嫌で、静かで、圧倒的に孤独な文体で語ってください。
@@ -32,7 +31,7 @@ def generate_advanced_text():
     ・ハッシュタグ、絵文字、丁寧語、教訓めいた結びは一切禁止。
     """
     try:
-        # 【重要】models/ を含めないのが最新SDKの正しい指定方法です
+        # ここが 404 エラーを回避する最重要ポイントです
         response = client_gemini.models.generate_content(
             model="gemini-1.5-flash", 
             contents=prompt
