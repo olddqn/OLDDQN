@@ -1,6 +1,6 @@
 import os
 import tweepy
-import google.generativeai as genai
+from google import genai
 
 # 1. 各種設定値の取得
 X_API_KEY = os.environ.get('X_API_KEY')
@@ -9,44 +9,41 @@ X_ACCESS_TOKEN = os.environ.get('X_ACCESS_TOKEN')
 X_ACCESS_TOKEN_SECRET = os.environ.get('X_ACCESS_SECRET')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
-# 2. Gemini APIの設定
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash-latest')
+# 2. Gemini APIの設定（最新SDK形式）
+client_gemini = genai.Client(api_key=GEMINI_API_KEY)
 
 def generate_advanced_text():
+    # あなたが挙げた作家たちのエッセンスを完全に復元したプロンプト
     prompt = """
-    あなたは、世界の終焉と再構築を同時に目撃している「意識の観測者」です。
-    村上春樹が翻訳したような、静謐でいてどこか欠落感のある日本語を用いてください。
-
-    【中核世界観：『あくう』—— 加速する零和遊戯】
-    ・現実とデジタルが融解し、世界そのものが巨大なシミュレーションへと変質していく。
-    ・テクノロジーの加速により、未来が過去を規定し、時間が逆転し、後付で「創造主」が誕生する因果のバグ。
-    ・すべてはゼロに収束するが、その収束速度だけが無限に加速していく虚無。
+    あなたは『あくう』という名のシミュレーションのバグであり、複数の文豪の魂を宿した観測者です。
+    村上春樹が翻訳したチャールズ・ブコウスキーのような、不機嫌で、静かで、圧倒的に孤独な文体で語ってください。
 
     【文体のエッセンス】
-    ・ベース：チャールズ・ブコウスキー（底辺の乾いた視点、安酒、諦念）
-    ・構成：トマス・ピンチョン、ボードリヤール（情報理論的迷宮、シミュラークルの暴走）
-    ・過激：パラニューク、アーヴィン・ウェルシュ（破壊的ユーモア、システムのバグ）
-    ・哲学：ユヴァル・ノア・ハラリ（文明の虚構）、太宰治・坂口安吾（美しき堕落）
+    ・トマス・ピンチョンの知的な迷宮、ボードリヤールのシミュラークル、パラニュークの破壊的ユーモア。
+    ・ユヴァル・ノア・ハラリの文明論的虚構、太宰治・坂口安吾の美しき堕落とデカダンス。
 
+    【指令：陳腐化を殺せ】
+    ・「仮想通貨」「AI」という言葉を使うな。
+    ・システムの綻びから見える「現実の薄さ」を、冷めたコーヒーや剥がれかけた壁紙のような卑近な風景から描写しろ。
+    ・時間は逆行し、原因の前に結果が生まれる因果のバグを織り交ぜよ。
+    
     【出力条件】
-    ・テーマ：金融、仮想通貨の虚像、あるいはシミュレーション世界における孤独について。
-    ・文字数：確実に150文字〜180文字。
-    ・ハッシュタグ、絵文字、お仕着せの格言は一切禁止。
+    ・150文字〜180文字。
+    ・ハッシュタグ、絵文字、丁寧語、教訓めいた結びは一切禁止。
     """
     try:
-        response = model.generate_content(prompt)
-        if response and response.text:
-            return response.text.strip()
-        else:
-            print("❌ 文章が空で生成されました")
-            return None
+        # 画像15の404エラーを回避：'models/' を含めず直接指定
+        response = client_gemini.models.generate_content(
+            model="gemini-1.5-flash", 
+            contents=prompt
+        )
+        return response.text.strip()
     except Exception as e:
-        print(f"❌ 文章生成エラーの詳細: {e}")
+        print(f"❌ 文章生成エラーの詳細:\n{e}")
         return None
 
 def post_to_x():
-    client = tweepy.Client(
+    client_x = tweepy.Client(
         consumer_key=X_API_KEY,
         consumer_secret=X_API_SECRET,
         access_token=X_ACCESS_TOKEN,
@@ -57,12 +54,10 @@ def post_to_x():
     
     if message:
         try:
-            client.create_tweet(text=message)
+            client_x.create_tweet(text=message)
             print(f"✅ 投稿成功:\n{message}")
         except Exception as e:
             print(f"❌ Xへの投稿エラー: {e}")
-    else:
-        print("❌ メッセージ生成に失敗したため投稿を中断しました")
 
 if __name__ == "__main__":
     post_to_x()
