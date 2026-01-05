@@ -1,14 +1,23 @@
-import tweepy
 import os
+import tweepy
 import random
 
+# GitHubのSecretsから値を取得
+API_KEY = os.environ.get('X_API_KEY')
+API_SECRET = os.environ.get('X_API_SECRET')
+ACCESS_TOKEN = os.environ.get('X_ACCESS_TOKEN')
+ACCESS_TOKEN_SECRET = os.environ.get('X_ACCESS_SECRET')
+
 def get_twitter_client():
+    # 修正した変数名を使って認証します
     return tweepy.Client(
-        consumer_key=os.environ.get('X_API_KEY'),
-        consumer_secret=os.environ.get('X_API_SECRET'),
-        access_token=os.environ.get('X_ACCESS_TOKEN'),
-        access_token_secret=os.environ.get('X_ACCESS_SECRET')
+        consumer_key=API_KEY,
+        consumer_secret=API_SECRET,
+        access_token=ACCESS_TOKEN,
+        access_token_secret=ACCESS_TOKEN_SECRET
     )
+
+# ここから下の「def masuwo_bukowski_action():」などはそのまま残す
 
 def masuwo_bukowski_action():
     client = get_twitter_client()
