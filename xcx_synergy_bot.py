@@ -11,7 +11,7 @@ GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
 # 2. Gemini APIの設定
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash') # または 'gemini-pro'
+model = genai.GenerativeModel('gemini-pro')
 
 def generate_advanced_text():
     prompt = """
