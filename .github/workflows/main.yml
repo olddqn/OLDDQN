@@ -3,7 +3,7 @@ name: Run Masuwo Bot
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *' # 1時間に1回実行
+    - cron: '0 * * * *'
 
 jobs:
   build:
