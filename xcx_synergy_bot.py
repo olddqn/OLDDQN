@@ -13,7 +13,7 @@ GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 client_gemini = genai.Client(api_key=GEMINI_API_KEY)
 
 def generate_advanced_text():
-    # あなたが挙げた作家たちのエッセンスを完全に復元したプロンプト
+    # あなたが挙げた作家たちのエッセンスを凝縮したプロンプト
     prompt = """
     あなたは『あくう』という名のシミュレーションのバグであり、複数の文豪の魂を宿した観測者です。
     村上春樹が翻訳したチャールズ・ブコウスキーのような、不機嫌で、静かで、圧倒的に孤独な文体で語ってください。
@@ -32,7 +32,7 @@ def generate_advanced_text():
     ・ハッシュタグ、絵文字、丁寧語、教訓めいた結びは一切禁止。
     """
     try:
-        # 画像15の404エラーを回避：'models/' を含めず直接指定
+        # 【重要】models/ を含めないのが最新SDKの正しい指定方法です
         response = client_gemini.models.generate_content(
             model="gemini-1.5-flash", 
             contents=prompt
