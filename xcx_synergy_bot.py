@@ -1,54 +1,70 @@
 import os
 import tweepy
-import random
+import google.generativeai as genai
 
-# GitHubのSecretsから値を取得
-API_KEY = os.environ.get('X_API_KEY')
-API_SECRET = os.environ.get('X_API_SECRET')
-ACCESS_TOKEN = os.environ.get('X_ACCESS_TOKEN')
-ACCESS_TOKEN_SECRET = os.environ.get('X_ACCESS_SECRET')
+# 1. 各種設定値の取得（GitHub Secretsから）
+X_API_KEY = os.environ.get('X_API_KEY')
+X_API_SECRET = os.environ.get('X_API_SECRET')
+X_ACCESS_TOKEN = os.environ.get('X_ACCESS_TOKEN')
+X_ACCESS_TOKEN_SECRET = os.environ.get('X_ACCESS_SECRET')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
-def get_twitter_client():
-    # 修正した変数名を使って認証します
-    return tweepy.Client(
-        consumer_key=API_KEY,
-        consumer_secret=API_SECRET,
-        access_token=ACCESS_TOKEN,
-        access_token_secret=ACCESS_TOKEN_SECRET
+# 2. Gemini APIの設定
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-1.5-flash') # または 'gemini-pro'
+
+def generate_advanced_text():
+    prompt = """
+    あなたは、世界の終焉と再構築を同時に目撃している「意識の観測者」です。
+    村上春樹が翻訳したような、静謐でいてどこか欠落感のある日本語を用いてください。
+
+    【中核世界観：『あくう』—— 加速する零和遊戯】
+    ・現実とデジタルが融解し、世界そのものが巨大なシミュレーションへと変質していく過程。
+    ・テクノロジーの加速により、未来が過去を規定し、時間が逆転し、後付で「創造主」が誕生する因果のバグ。
+    ・すべてはゼロに収束するが、その収束速度だけが無限に加速していく、美しくも残酷な「マトリックス」的な虚無。
+
+    【文体のエッセンス】
+    ・ベース：チャールズ・ブコウスキー（安酒を飲みながら、崩壊する宇宙を眺める乾いた視点）
+    ・構成：トマス・ピンチョン、ボードリヤール（情報理論的迷宮、シミュラークルの暴走）
+    ・過激：チャック・パラニューク、アーヴィン・ウェルシュ（破壊的なユーモア、肉体の消失とシステムのバグに対する破壊衝動）
+    ・哲学：ユヴァル・ノア・ハラリ（サピエンスが神を「捏造」するプロセス）
+    ・情緒：太宰治、坂口安吾（システムの中で窒息する魂の、美しき堕落）
+
+    【出力条件】
+    ・テーマ：金融、仮想通貨の虚像、あるいはシミュレーション世界における「愛」や「孤独」の無意味さについて。
+    ・トーン：極めて思慮深く、哲学的な絶望を湛えつつも、どこか「やれやれ」と肩をすくめるようなユーモア。
+    ・文字数：確実に150文字〜180文字（日本語）。
+    ・禁止：ハッシュタグ、絵文字、教訓めいた締めくくり。
+    """
+    try:
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        print(f"❌ 文章生成エラー: {e}")
+        return None
+
+def post_to_x():
+    # X API認証
+    client = tweepy.Client(
+        consumer_key=X_API_KEY,
+        consumer_secret=X_API_SECRET,
+        access_token=X_ACCESS_TOKEN,
+        access_token_secret=X_ACCESS_TOKEN_SECRET
     )
-
-# ここから下の「def masuwo_bukowski_action():」などはそのまま残す
-
-def masuwo_bukowski_action():
-    client = get_twitter_client()
     
-    messages = [
-        "世界を救おうなんて連中は、自分の靴紐の結び方すら知らねえ。俺はただ、ビットコインが死んでいくのを眺めてる。 #Bukowski #Crypto",
-        "天才になるには時間がかかるが、クズになるのは一瞬だ。アニメのヒロインが画面で泣いている。俺は安酒を飲み、この馬鹿げた世界に乾杯するよ。",
-        "陰謀論？ 結構なことだ。だが現実はそれよりずっと退屈で残酷だ。どぶのネズミの方が、メタバースで踊る奴らよりマシな顔をしてやがる。",
-        "パンクってのは、他人のルールで踊らないことだ。たとえそこが地獄の底でもな。漫画を読み耽り、夜が明けるのを待つ。それが俺の聖書だ。",
-        "政府も神も、俺の家賃を払っちゃくれない。暗号資産の暴落を笑い飛ばせ。人生なんてのは、負け続けることを学ぶための長いレースなんだよ。"
-    ]
+    # 文章生成
+    message = generate_advanced_text()
     
-    try:
-        client.create_tweet(text=random.choice(messages))
-        print("✅ 投稿完了")
-    except Exception as e:
-        print(f"❌ 投稿エラー: {e}")
-
-    keywords = ['ビットコイン', 'アンダーグラウンド', 'サイバーパンク', '都市伝説', '深夜アニメ', 'ディストピア']
-    target_word = random.choice(keywords)
-    
-    try:
-        query = f'{target_word} -is:retweet' 
-        tweets = client.search_recent_tweets(query=query, max_results=5)
-        if tweets.data:
-            for tweet in tweets.data:
-                client.like(tweet.id)
-                client.follow_user(tweet.author_id)
-                print(f"👍 {target_word} へのアクション完了")
-    except Exception as e:
-        print(f"❌ アクションエラー: {e}")
+    if message:
+        try:
+            # 投稿実行
+            client.create_tweet(text=message)
+            print("✅ 投稿成功:")
+            print(f"---内容---\n{message}\n----------")
+        except Exception as e:
+            print(f"❌ Xへの投稿エラー: {e}")
+    else:
+        print("❌ メッセージが空のため投稿をスキップしました")
 
 if __name__ == "__main__":
-    masuwo_bukowski_action()
+    post_to_x()
