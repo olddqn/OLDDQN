@@ -9,7 +9,8 @@ X_ACCESS_TOKEN = os.environ.get('X_ACCESS_TOKEN')
 X_ACCESS_TOKEN_SECRET = os.environ.get('X_ACCESS_SECRET')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
-# 2. Gemini APIの設定 (最新の書き方)
+# 2. Gemini APIの設定
+# configでAPIキーを渡す標準的な形式にします
 client_gemini = genai.Client(api_key=GEMINI_API_KEY)
 
 def generate_advanced_text():
@@ -22,22 +23,22 @@ def generate_advanced_text():
     ・テクノロジーの加速により、未来が過去を規定し、時間が逆転し、後付で「創造主」が誕生する因果のバグ。
 
     【文体のエッセンス】
-    ・チャールズ・ブコウスキー（底辺の乾いた視点）、トマス・ピンチョン（知的な迷宮）、パラニューク（破壊的ユーモア）、ハラリ（文明の虚構）、太宰治・坂口安吾（美しき堕落）。
+    ・チャールズ_ブコウスキー、トマス_ピンチョン、パラニューク、ハラリ、太宰治、坂口安吾。
 
     【出力条件】
-    ・テーマ：金融、仮想通貨の虚像、あるいはシミュレーション世界における孤独。
-    ・文字数：確実に150文字〜180文字。
-    ・ハッシュタグ、絵文字は禁止。
+    ・テーマ：金融、仮想通貨、あるいはシミュレーション世界における孤独。
+    ・文字数：150文字〜180文字。
+    ・ハッシュタグ、絵文字禁止。
     """
     try:
-        # 最新のモデル呼び出し方法
+        # モデルを最も安定している 'gemini-1.5-flash' に変更
         response = client_gemini.models.generate_content(
-            model="gemini-2.0-flash-exp", # 最新モデル
+            model="gemini-1.5-flash", 
             contents=prompt
         )
         return response.text.strip()
     except Exception as e:
-        print(f"❌ 文章生成エラー: {e}")
+        print(f"❌ 文章生成エラーの詳細:\n{e}")
         return None
 
 def post_to_x():
