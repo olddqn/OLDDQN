@@ -2,28 +2,31 @@ import os
 import tweepy
 from google import genai
 
-# 1. クライアント初期化
+# クライアント初期化
 client_gemini = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
 
-def generate_text():
+def generate_deep_text():
     # 文学的ノイズと圧倒的孤独を強制するプロンプト
     prompt = """
-    あなたは『あくう』の観測者。村上春樹訳のチャールズ・ブコウスキーのように、不機嫌で、乾いていて、静かな孤独を語れ。
-    
-    【エッセンス】
-    トマス・ピンチョンの知的な迷宮、パラニュークの破壊的ユーモア、太宰治・坂口安吾のデカダンス。
-    ユヴァル・ノア・ハラリの文明論的虚構を、システムの綻び（バグ）として描写せよ。
+    あなたは『あくう』という名のシミュレーション世界の観測者です。
+    村上春樹が翻訳するチャールズ・ブコウスキーのように、不機嫌で、乾いていて、圧倒的に孤独な文体で語ってください。
 
-    【指令】
-    「仮想通貨」「AI」「未来」等の陳腐な単語は死んでも使うな。
-    冷めたコーヒーの膜や電気信号のノイズ、剥がれかけた安壁紙といった卑近な風景から書き始めろ。
-    時間は逆行し、原因の前に結果が生まれる因果のバグを織り交ぜよ。
+    【指令：陳腐化を殺せ】
+    ・「仮想通貨」「AI」「未来」「ビットコイン」といった安易なキーワードは絶対に使用禁止。
+    ・教訓を語るな。結論を出すな。
+    ・システムの綻び（バグ）から見える「現実の薄さ」を、冷めたコーヒーの膜や剥がれかけた壁紙といった卑近な風景から描写しろ。
+
+    【文体のエッセンス】
+    ・トマス・ピンチョンの知的な迷宮、パラニュークの暴力的な静寂。
+    ・太宰治・坂口安吾の「美しき堕落」とデカダンス。
+    ・時間は逆行し、原因の前に結果が生まれる因果のバグを織り交ぜよ。
 
     【出力ルール】
-    150文字〜180文字。ハッシュタグ・絵文字・感嘆符・丁寧語は禁止。
+    ・150文字〜180文字。
+    ・ハッシュタグ、絵文字、感嘆符(!)、丁寧語（です・ます）は禁止。
     """
     try:
-        # models/ を入れないのが最新(v0.3.0+)の正解
+        # 最新の指定方法（models/を入れない）
         response = client_gemini.models.generate_content(
             model="gemini-1.5-flash", 
             contents=prompt
@@ -38,13 +41,13 @@ def post():
         os.environ.get('X_API_KEY'), os.environ.get('X_API_SECRET'),
         os.environ.get('X_ACCESS_TOKEN'), os.environ.get('X_ACCESS_SECRET')
     )
-    msg = generate_text()
+    msg = generate_deep_text()
     if msg:
         try:
             client_x.create_tweet(text=msg)
-            print(f"✅ SUCCESS: {msg}")
+            print(f"✅ 成功:\n{msg}")
         except Exception as e:
-            print(f"❌ X POST ERROR: {e}")
+            print(f"❌ X投稿エラー: {e}")
 
 if __name__ == "__main__":
     post()
