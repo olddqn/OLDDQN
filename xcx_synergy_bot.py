@@ -13,6 +13,7 @@ GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 client_gemini = genai.Client(api_key=GEMINI_API_KEY)
 
 def generate_advanced_text():
+    # あなたが挙げた作家たちの魂をすべて込めたプロンプト
     prompt = """
     あなたは『あくう』という名のシミュレーションのバグであり、複数の文豪の魂を宿した観測者です。
     村上春樹が翻訳したチャールズ・ブコウスキーのような、不機嫌で、静かで、圧倒的に孤独な文体で語ってください。
@@ -23,7 +24,7 @@ def generate_advanced_text():
 
     【指令：陳腐化を殺せ】
     ・「仮想通貨」「AI」という言葉を使うな。
-    ・システムの綻びから見える「現実の薄さ」を、冷めたコーヒーや剥がれかけた壁紙のような卑近な風景から描写しろ。
+    ・システムの綻びから見える「現実の薄さ」を、冷めたコーヒーや剥がれかけた壁紙のような風景から描写しろ。
     ・時間は逆行し、原因の前に結果が生まれる因果のバグを織り交ぜよ。
     
     【出力条件】
@@ -31,7 +32,7 @@ def generate_advanced_text():
     ・ハッシュタグ、絵文字、丁寧語、教訓めいた結びは一切禁止。
     """
     try:
-        # ここが 404 エラーを回避する最重要ポイントです
+        # 【ここが修正の核心】 'models/' を絶対に入れないでください
         response = client_gemini.models.generate_content(
             model="gemini-1.5-flash", 
             contents=prompt
@@ -42,6 +43,7 @@ def generate_advanced_text():
         return None
 
 def post_to_x():
+    # X (Twitter) API認証
     client_x = tweepy.Client(
         consumer_key=X_API_KEY,
         consumer_secret=X_API_SECRET,
