@@ -2,30 +2,33 @@ import os
 import tweepy
 
 def post():
-    # 1. 鍵の読み込み
-    api_key = os.environ.get('X_API_KEY')
-    api_secret = os.environ.get('X_API_SECRET')
+    # 4つの鍵をすべて個別に読み込む
+    consumer_key = os.environ.get('X_API_KEY')
+    consumer_secret = os.environ.get('X_API_SECRET')
     access_token = os.environ.get('X_ACCESS_TOKEN')
-    access_secret = os.environ.get('X_ACCESS_SECRET')
+    access_token_secret = os.environ.get('X_ACCESS_SECRET')
 
-    # 2. Xへの接続（認証）
-    client_x = tweepy.Client(
-        consumer_key=api_key,
-        consumer_secret=api_secret,
-        access_token=access_token,
-        access_token_secret=access_secret
+    # v1.1とv2の両方の認証を組み合わせた、最も確実な認証方式
+    auth = tweepy.OAuth1UserHandler(consumer_key, consumer_secret, access_token, access_token_secret)
+    api_v1 = tweepy.API(auth)
+    
+    # 投稿にはv2のClientを使用
+    client_v2 = tweepy.Client(
+        consumer_key=consumer_key, consumer_secret=consumer_secret,
+        access_token=access_token, access_token_secret=access_token_secret
     )
     
-    # AIを使わない固定メッセージ
-    msg = "Connection Test: あくうの接続テスト。これが届けば、Xとの接続は成功です。"
+    msg = "Physical Connection Test: 認証方式を変更して再テスト。これが最後のエラー確認です。"
     
     try:
-        # 3. 投稿の実行
-        client_x.create_tweet(text=msg)
-        print(f"✅ Xへの物理的な接続に成功しました！:\n{msg}")
+        # v2での投稿
+        client_v2.create_tweet(text=msg)
+        print(f"✅ ついに投稿成功:\n{msg}")
     except Exception as e:
-        print(f"❌ X投稿失敗: {e}")
-        print("※ X側の権限設定(Read and Write)か、鍵の再発行(Regenerate)が必要です。")
+        print(f"❌ まだエラーが出ます: {e}")
+        # ここで「認証エラー」か「権限エラー」か「プラン制限」かを表示します
+        if "403" in str(e):
+            print("💡 403エラー: X側の『App設定』の中のApp TypeやCallback URLが未設定の可能性があります。")
 
 if __name__ == "__main__":
     post()
