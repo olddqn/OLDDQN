@@ -1,34 +1,52 @@
 import os
 import tweepy
+from google import genai
 
-def post():
-    # 4つの鍵をすべて個別に読み込む
-    consumer_key = os.environ.get('X_API_KEY')
-    consumer_secret = os.environ.get('X_API_SECRET')
-    access_token = os.environ.get('X_ACCESS_TOKEN')
-    access_token_secret = os.environ.get('X_ACCESS_SECRET')
+# --- 1. クライアント初期化 ---
+# Gemini (AI)
+client_gemini = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
 
-    # v1.1とv2の両方の認証を組み合わせた、最も確実な認証方式
-    auth = tweepy.OAuth1UserHandler(consumer_key, consumer_secret, access_token, access_token_secret)
-    api_v1 = tweepy.API(auth)
-    
-    # 投稿にはv2のClientを使用
-    client_v2 = tweepy.Client(
-        consumer_key=consumer_key, consumer_secret=consumer_secret,
-        access_token=access_token, access_token_secret=access_token_secret
+# X (Twitter) - 4つの鍵を環境変数から取得
+def get_x_client():
+    return tweepy.Client(
+        consumer_key=os.environ.get('X_API_KEY'),
+        consumer_secret=os.environ.get('X_API_SECRET'),
+        access_token=os.environ.get('X_ACCESS_TOKEN'),
+        access_token_secret=os.environ.get('X_ACCESS_SECRET')
     )
-    
-    msg = "Physical Connection Test: 認証方式を変更して再テスト。これが最後のエラー確認です。"
-    
+
+# --- 2. 文生成関数 ---
+def generate_text():
+    prompt = """
+    あなたは『あくう』の観測者。村上春樹訳のブコウスキーのように、不機嫌で、静かで、圧倒的に孤独な文体で語れ。
+    150文字程度。ハッシュタグ・絵文字・丁寧語禁止。
+    テーマ：時間の逆行、冷めたコーヒー、電気信号のノイズ。
+    """
     try:
-        # v2での投稿
-        client_v2.create_tweet(text=msg)
-        print(f"✅ ついに投稿成功:\n{msg}")
+        response = client_gemini.models.generate_content(
+            model="gemini-1.5-flash", 
+            contents=prompt
+        )
+        return response.text.strip()
     except Exception as e:
-        print(f"❌ まだエラーが出ます: {e}")
-        # ここで「認証エラー」か「権限エラー」か「プラン制限」かを表示します
-        if "403" in str(e):
-            print("💡 403エラー: X側の『App設定』の中のApp TypeやCallback URLが未設定の可能性があります。")
+        print(f"❌ Gemini文章生成エラー: {e}")
+        return None
+
+# --- 3. メイン処理 ---
+def main():
+    # 文言作成
+    msg = generate_text()
+    if not msg:
+        return
+
+    # Xへの投稿
+    try:
+        client_x = get_x_client()
+        client_x.create_tweet(text=msg)
+        print(f"✅ ついに成功！Xに投稿されました:\n{msg}")
+    except Exception as e:
+        print(f"❌ X投稿失敗: {e}")
+        print("💡 これで失敗する場合、トークンの『再発行(Regenerate)』と『GitHub上書き』を今一度確認してください。")
 
 if __name__ == "__main__":
-    post()
+    main()
