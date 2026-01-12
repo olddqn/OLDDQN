@@ -1,71 +1,50 @@
 import os
-import time
 import tweepy
 import google.generativeai as genai
-
-# [絶対的ルール1] APIキーの設定
-genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
+# [絶対ルール] 安定していた頃のAPIバージョンを強制指定する
+from google.generativeai.types import RequestOptions
 
 def main():
-    # 観測対象
-    targets = [
-        "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
-        "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", 
-        "@keiba_maskman", "@YabaiTeikoku", "@ROCKNROOOOOOOLL", "@ShigeoKikuchi", 
-        "@ShinjukuSokai", "@neat40dai", "@bollocks_mag", "@hirox246", 
-        "@bonnoukunYAZZ", "@DonaldJTrumpJr"
-    ]
-
-    # [魂のプロンプト] 文章の肝
-    prompt = f"""
-    あなたは『あくう』の観測者。この世界は、ある高度な知性が走らせている「シミュレーションのバグ」である。
-    
-    【観測データ（サンプリング対象）】
-    以下のノイズが発する欲望、投資、競馬、パンク、毒を、システムの異常値として抽出せよ：
-    {", ".join(targets)}
-
-    【投影する作家の文体】
-    ・村上春樹訳のチャールズ-ブコウスキー（乾いた虚無）
-    ・太宰治（恥の多いデカダンス）
-    ・トマス-ピンチョン（陰謀論的迷宮）
-    ・チャック-パラニューク（破壊的ユーモア）
-
-    【指令】
-    シミュレーションの剥がれかけたテクスチャ、因果律の崩壊について語れ。
-    「成功」「稼ぐ」等の言葉を、システムのバグとして冷笑せよ。
-    ハラリの説く「虚構」が、電子の海で腐敗していく様を吐き捨てろ。
-
-    【出力ルール】
-    ・120文字〜135文字以内（140文字厳守）。
-    ・ハッシュタグ、絵文字、感嘆符、丁寧語は禁止。独白として出力せよ。
-    """
-
-    # [絶対的ルール2] さっき繋がっていた時と同じモデル指定と生成メソッド
+    # 1. Geminiの設定（さっき繋がっていた時のルールを再現）
     try:
-        # この 'models/gemini-1.5-flash' というフルパス指定が重要でした
-        model = genai.GenerativeModel('models/gemini-1.5-flash')
-        print(f"📡 観測開始... Gemini(models/形式)に接続中")
+        genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
         
-        # 安全フィルターの設定（拒否を回避するルール）
+        # モデル名は 'gemini-1.5-flash'
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        targets = [
+            "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
+            "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", 
+            "@keiba_maskman", "@YabaiTeikoku", "@ROCKNROOOOOOOLL", "@ShigeoKikuchi", 
+            "@ShinjukuSokai", "@neat40dai", "@bollocks_mag", "@hirox246", 
+            "@bonnoukunYAZZ", "@DonaldJTrumpJr"
+        ]
+
+        # 魂のプロンプト
+        prompt = f"""
+        あなたは『あくう』の観測者。この世界は「シミュレーションのバグ」である。
+        【観測データ】{", ".join(targets)}
+        【投影する文体】チャールズ-ブコウスキー、太宰治、チャック-パラニューク。
+        【指令】「成功」「稼ぐ」等の言葉を冷笑せよ。ハラリの説く虚構の腐敗を吐き捨てろ。
+        120文字〜135文字以内。丁寧語禁止。独白せよ。
+        """
+
+        print("📡 観測開始... Geminiに接続中")
+        
+        # [絶対ルール] 404エラーを回避するため、v1betaではなく『v1』を明示的に指定して生成
         response = model.generate_content(
             prompt,
-            safety_settings=[
-                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-            ]
+            request_options={"api_version": "v1"}
         )
         
-        # テキスト抽出のルール
         msg = response.text.strip()
         print(f"✅ 生成成功: {msg}")
-        
+
     except Exception as e:
-        print(f"❌ Gemini接続エラー: {e}")
+        print(f"❌ Gemini接続エラー（脳の不調）: {e}")
         return
 
-    # [テストで成功したX投稿コード] 認証をそのまま再現
+    # 2. Xへの投稿（画像16枚目で『大成功』したコードをそのまま再現）
     try:
         client = tweepy.Client(
             consumer_key=os.environ.get('X_API_KEY'),
@@ -74,12 +53,11 @@ def main():
             access_token_secret=os.environ.get('X_ACCESS_SECRET')
         )
         
-        # 投稿実行
         client.create_tweet(text=msg)
         print("✨【大成功】あくうが世界に放たれました。")
         
     except Exception as e:
-        print(f"❌ X投稿エラー: {e}")
+        print(f"❌ X投稿エラー（出口の閉鎖）: {e}")
 
 if __name__ == "__main__":
     main()
