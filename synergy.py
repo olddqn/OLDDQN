@@ -1,13 +1,13 @@
 import os
 import time
 import google.generativeai as genai
-from google.api_core import exceptions
+# エラー判定を確実にするためのインポート変更
+from google.rpc import code_pb2
 
 # Gemini設定
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 def main():
-    # 観測対象のノイズ
     targets = [
         "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
         "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", 
@@ -16,13 +16,12 @@ def main():
         "@bonnoukunYAZZ", "@DonaldJTrumpJr"
     ]
 
-    # 改良された高密度プロンプト
     prompt = f"""
     あなたは『あくう』の観測者。この世界は高度な知性が走らせている「シミュレーションのバグ」である。
     以下のノイズが発する欲望や毒を、システムの異常値として抽出せよ：
     {", ".join(targets)}
 
-    【投影する作家の文体】
+    【投影する作家 foundations】
     ・村上春樹訳のチャールズ-ブコウスキー（乾いた虚無）
     ・太宰治（恥の多いデカダンス）
     ・トマス-ピンチョン（陰謀論的迷宮）
@@ -39,32 +38,28 @@ def main():
     ・システムログのような冷徹な独白のみを出力せよ。
     """
 
-    # 接続の安定性を考慮し、1.5-flash-8bを使用
     model = genai.GenerativeModel('gemini-1.5-flash-8b')
 
-    # 混雑対策のリトライ
     for attempt in range(3):
         try:
-            print(f"📡 あくうが深層意識をスキャン中... ({attempt + 1}回目)")
+            print(f"📡 あくう：試行 {attempt + 1}回目...")
             response = model.generate_content(prompt)
             msg = response.text.strip()
             
-            # 文字数確認
-            char_count = len(msg)
-            print(f"\n✅ 独白生成（{char_count}文字）:")
+            print(f"\n✅ 独白生成（{len(msg)}文字）:")
             print("-" * 40)
             print(msg)
             print("-" * 40)
-            
-            # ここまで来れば成功です
             return 
 
-        except exceptions.ResourceExhausted:
-            print("⏳ サーバー混雑。15秒待機して再接続します。")
-            time.sleep(15)
         except Exception as e:
-            print(f"❌ エラー発生: {e}")
-            break
+            # 429エラー（混雑）かどうかを文字列で判定する確実な方法
+            if "429" in str(e) or "ResourceExhausted" in str(e):
+                print(f"⏳ 混雑中... 20秒待機してリトライします。")
+                time.sleep(20)
+            else:
+                print(f"❌ 予期せぬエラー: {e}")
+                break
 
 if __name__ == "__main__":
     main()
