@@ -1,30 +1,25 @@
 import os
 import google.generativeai as genai
 
-# 1. GitHubのSecretsにあるキーを設定
+# 1. Gemini設定
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 def main():
-    print("--- Gemini連携テスト開始 ---")
-    
     try:
-        # 2. モデルの指定（最も安定している旧世代の指定）
+        # 【重要】403を突破しやすい「1.5-flash」を直接指定
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        # 3. テスト用の短いプロンプト
-        prompt = "あなたは『あくう』。一言だけ、今の気分を独白せよ。"
+        # 5日前の雰囲気を再現した最小プロンプト
+        prompt = "あなたは『あくう』。冷徹な観測者として、人間の欲望について100文字以内で独白せよ。"
         
-        print("🤖 Geminiに接続中...")
+        print("🤖 あくうが接続を試みています...")
         response = model.generate_content(prompt)
         
-        # 4. 結果を表示（ここがログに出れば連携成功！）
-        print("✅ Geminiからの応答:")
-        print(f"「{response.text.strip()}」")
-        print("--- テスト完了：連携は正常です ---")
+        # これがログに出れば「連携成功」です
+        print(f"✅ 生成成功: {response.text.strip()}")
 
     except Exception as e:
-        print(f"❌ 連携エラー: {e}")
-        # 詳細なエラー内容をログに出力させる
+        print(f"❌ まだ拒否されています: {e}")
         raise e
 
 if __name__ == "__main__":
