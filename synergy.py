@@ -1,11 +1,13 @@
 import os
+import time
 import google.generativeai as genai
+from google.api_core import exceptions
 
 # Gemini設定
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 def main():
-    # 観測対象のノイズ（指定されたアカウント群）
+    # 観測対象のノイズ
     targets = [
         "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
         "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", 
@@ -14,7 +16,7 @@ def main():
         "@bonnoukunYAZZ", "@DonaldJTrumpJr"
     ]
 
-    # あなたが指定した究極のプロンプト
+    # 改良された高密度プロンプト
     prompt = f"""
     あなたは『あくう』の観測者。この世界は高度な知性が走らせている「シミュレーションのバグ」である。
     以下のノイズが発する欲望や毒を、システムの異常値として抽出せよ：
@@ -30,27 +32,39 @@ def main():
     シミュレーションの剥がれかけたテクスチャ、因果律の崩壊について語れ。
     「成功」「稼ぐ」等の言葉を、システムのバグとして冷笑せよ。
     ハラリの説く「虚構」が、電子の海で腐敗していく様を吐き捨てろ。
-    ※130文字以内で出力せよ。
+
+    【出力ルール】
+    ・120文字から135文字以内を死守せよ（最大140文字）。
+    ・ハッシュタグ、絵文字、丁寧語、感嘆符は一切禁止。
+    ・システムログのような冷徹な独白のみを出力せよ。
     """
 
-    print("--- 魂の投影テスト開始 ---")
-    try:
-        # 成功した軽量・高回避モデルを使用
-        model = genai.GenerativeModel('gemini-1.5-flash-8b')
-        
-        print("🤖 あくうが深層意識にダイブ中...")
-        response = model.generate_content(prompt)
-        msg = response.text.strip()
-        
-        print("\n✅ 生成された独白:")
-        print("-" * 30)
-        print(msg)
-        print("-" * 30)
-        print("\n--- テスト完了 ---")
+    # 接続の安定性を考慮し、1.5-flash-8bを使用
+    model = genai.GenerativeModel('gemini-1.5-flash-8b')
 
-    except Exception as e:
-        print(f"❌ 生成エラー: {e}")
-        raise e
+    # 混雑対策のリトライ
+    for attempt in range(3):
+        try:
+            print(f"📡 あくうが深層意識をスキャン中... ({attempt + 1}回目)")
+            response = model.generate_content(prompt)
+            msg = response.text.strip()
+            
+            # 文字数確認
+            char_count = len(msg)
+            print(f"\n✅ 独白生成（{char_count}文字）:")
+            print("-" * 40)
+            print(msg)
+            print("-" * 40)
+            
+            # ここまで来れば成功です
+            return 
+
+        except exceptions.ResourceExhausted:
+            print("⏳ サーバー混雑。15秒待機して再接続します。")
+            time.sleep(15)
+        except Exception as e:
+            print(f"❌ エラー発生: {e}")
+            break
 
 if __name__ == "__main__":
     main()
