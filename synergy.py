@@ -9,7 +9,7 @@ def main():
     
     try:
         # 2. モデルの指定（最も安定している旧世代の指定）
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         # 3. テスト用の短いプロンプト
         prompt = "あなたは『あくう』。一言だけ、今の気分を独白せよ。"
