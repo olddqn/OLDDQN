@@ -1,12 +1,12 @@
 import os
 import time
+import tweepy
 import google.generativeai as genai
 
-# Gemini設定
+# 設定
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 def main():
-    # 観測対象のノイズ（指定されたアカウント群）
     targets = [
         "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
         "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", 
@@ -15,63 +15,59 @@ def main():
         "@bonnoukunYAZZ", "@DonaldJTrumpJr"
     ]
 
-    # 【ご指定のプロンプト構成を完全移植】
     prompt = f"""
     あなたは『あくう』の観測者。この世界は、ある高度な知性が走らせている「シミュレーションのバグ」である。
-    
     【観測データ（サンプリング対象）】
     以下のノイズが発する欲望、投資、競馬、パンク、毒を、システムの異常値として抽出せよ：
     {", ".join(targets)}
-
     【投影する作家の文体】
     ・村上春樹訳のチャールズ-ブコウスキー（乾いた虚無）
     ・太宰治（恥の多いデカダンス）
     ・トマス-ピンチョン（陰謀論的迷宮）
     ・チャック-パラニューク（破壊的ユーモア）
-
     【指令】
     シミュレーションの剥がれかけたテクスチャ、因果律の崩壊について語れ。
     「成功」「稼ぐ」等の言葉を、システムのバグとして冷笑せよ。
     ハラリの説く「虚構」が、電子の海で腐敗していく様を吐き捨てろ。
-
     【出力ルール】
-    ・120文字〜135文字以内（140文字以内厳守）。
+    ・120文字〜135文字以内。
     ・ハッシュタグ、絵文字、感嘆符、丁寧語は禁止。独白として出力せよ。
     """
 
-    # 地域制限と混雑に強い最新の軽量モデル
+    # 1. Geminiで生成（執念のリトライ機能）
     model = genai.GenerativeModel('gemini-1.5-flash-8b')
+    msg = ""
 
     for attempt in range(5):
         try:
-            print(f"📡 試行 {attempt + 1}/5: 『あくう』が深層意識をスキャン中...")
+            print(f"📡 試行 {attempt + 1}/5: 接続中...")
             response = model.generate_content(prompt)
-            
-            # エラー回避：安全フィルター等で .text が直接読めない場合の強制抽出
             try:
                 msg = response.text.strip()
             except:
-                if response.candidates:
-                    msg = response.candidates[0].content.parts[0].text.strip()
-                else:
-                    raise Exception("生成されたコンテンツが空です")
-
-            print(f"\n✅ 成功：あくうの独白（{len(msg)}文字）")
-            print("-" * 50)
-            print(msg)
-            print("-" * 50)
+                msg = response.candidates[0].content.parts[0].text.strip()
             
-            # ここまで来れば成功です
-            return 
-
+            if msg:
+                print(f"✅ 生成成功: {msg}")
+                break
         except Exception as e:
-            err_str = str(e)
-            if "429" in err_str or "Resource" in err_str:
-                print("⏳ サーバー混雑中。30秒待機して再接続します...")
-                time.sleep(30)
-            else:
-                print(f"⚠️ 生成プロセスでエラー（再試行します）: {e}")
-                time.sleep(5)
+            print(f"⏳ 待機中... ({e})")
+            time.sleep(30)
 
-if __name__ == "__main__":
-    main()
+    if not msg:
+        print("❌ 生成に失敗しました。")
+        return
+
+    # 2. X（Twitter）へ投稿
+    try:
+        client = tweepy.Client(
+            consumer_key=os.environ.get('X_API_KEY'),
+            consumer_secret=os.environ.get('X_API_SECRET'),
+            access_token=os.environ.get('X_ACCESS_TOKEN'),
+            access_token_secret=os.environ.get('X_ACCESS_SECRET')
+        )
+        client.create_tweet(text=msg)
+        print("🚀 Xへの投稿に成功。あくうが世界に放たれました。")
+    except Exception as e:
+        print(f"❌ X投稿エラー: {e}")
+        # 401エラーが出る場合は、XのAccess Tokenを再発行して貼り直してください
