@@ -1,32 +1,22 @@
 name: Akuh Simulation Observation
 
 on:
-  workflow_dispatch: # 手動実行用
-  schedule:
-    - cron: '0 21 * * *' # 日本時間 朝6時（毎日）
+  workflow_dispatch:
 
 jobs:
   build:
-    # [絶対ルール] UbuntuではなくmacOSを使うことで地域制限(403)を回避します
-    runs-on: macos-latest
-    
+    runs-on: macos-latest # [絶対ルール] 403回避のためmacOSを使用
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
       - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install tweepy google-generativeai
-
+        run: pip install tweepy google-generativeai
       - name: Run Akuh Observation
         env:
-          # Secretsに設定したキーをここで流し込みます
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
