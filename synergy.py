@@ -13,7 +13,7 @@ def main():
 
     try:
         # 【重要】404エラーを回避するため 'models/' を省き、APIバージョンを自動に任せます
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
         
         print("🤖 あくうが思考中...")
         # 以前のログで失敗していた箇所です
