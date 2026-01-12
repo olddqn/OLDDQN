@@ -1,6 +1,6 @@
 import os
 import tweepy
-import google.generativeai as genai  # ←ここを修正しました
+import google.generativeai
 
 # GitHubのSecretsに登録した名前を使います
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
