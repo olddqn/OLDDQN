@@ -1,10 +1,12 @@
-name: X Connection Test
+name: Akuh Simulation Observation
 
 on:
-  workflow_dispatch: # 手動実行用
+  workflow_dispatch: # 手動実行用ボタンを表示
+  schedule:
+    - cron: '0 21 * * *' # 毎日、日本時間の朝6時に自動実行
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,10 +21,12 @@ jobs:
         run: |
           pip install tweepy google-generativeai
 
-      - name: Run X Test
+      - name: Run Akuh Observation
         env:
+          # ここにGeminiのキーとXの鍵がすべて揃っていることが重要です
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
-        run: python test_x.py  # ここでテストファイルを実行します
+        run: python synergy.py # synergy.py を実行するように戻しました
