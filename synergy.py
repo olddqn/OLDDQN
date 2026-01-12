@@ -6,13 +6,7 @@ import google.generativeai as genai
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 def main():
-    targets = [
-        "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
-        "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", 
-        "@keiba_maskman", "@YabaiTeikoku", "@ROCKNROOOOOOOLL", "@ShigeoKikuchi", 
-        "@ShinjukuSokai", "@neat40dai", "@bollocks_mag", "@hirox246", 
-        "@bonnoukunYAZZ", "@DonaldJTrumpJr"
-    ]
+    targets = ["@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", "@keiba_maskman", "@YabaiTeikoku", "@ROCKNROOOOOOOLL", "@ShigeoKikuchi", "@ShinjukuSokai", "@neat40dai", "@bollocks_mag", "@hirox246", "@bonnoukunYAZZ", "@DonaldJTrumpJr"]
 
     prompt = f"""
     あなたは『あくう』の観測者。この世界は高度な知性が走らせている「シミュレーションのバグ」である。
@@ -31,35 +25,32 @@ def main():
     ハラリの説く「虚構」が、電子の海で腐敗していく様を吐き捨てろ。
 
     【出力ルール】
-    ・120文字から135文字以内を死守せよ（最大140文字）。
+    ・120文字から135文字以内を死守せよ。
     ・ハッシュタグ、絵文字、丁寧語、感嘆符は一切禁止。独白せよ。
     """
 
-    # 1.5-flash-8b は軽量で地域制限にも強い
     model = genai.GenerativeModel('gemini-1.5-flash-8b')
 
-    # 5回リトライ（粘り強さを最大に）
+    # どんなエラーでも5回リトライする「執念」のループ
     for attempt in range(5):
         try:
-            print(f"📡 試行 {attempt + 1}/5: あくう、接続中...")
+            print(f"📡 試行 {attempt + 1}/5: 接続中...")
             response = model.generate_content(prompt)
-            msg = response.text.strip()
             
-            print(f"\n✅ 成功：あくうの独白（{len(msg)}文字）")
-            print("-" * 40)
-            print(msg)
-            print("-" * 40)
-            return 
+            if response.text:
+                msg = response.text.strip()
+                print(f"\n✅ 成功：あくうの独白（{len(msg)}文字）")
+                print("-" * 40)
+                print(msg)
+                print("-" * 40)
+                return 
 
         except Exception as e:
-            err_msg = str(e)
-            # エラー文の中に「429」や「Resource」があれば混雑とみなして待機
-            if "429" in err_msg or "Resource" in err_msg:
-                print("⏳ Googleが混雑しています。30秒間、沈黙して待ちます...")
-                time.sleep(30)
-            else:
-                print(f"❌ 予期せぬエラー: {e}")
-                break
+            # エラーの内容を問わず、混雑を疑って30秒待機
+            print(f"⏳ 待機中... (エラー原因: {e})")
+            time.sleep(30)
+
+    print("❌ 5回試しましたが、Google側の制限が解除されませんでした。")
 
 if __name__ == "__main__":
     main()
