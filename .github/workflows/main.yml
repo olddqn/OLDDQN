@@ -1,13 +1,13 @@
 name: Akuh Simulation Observation
 
 on:
-  workflow_dispatch: # 手動実行用ボタンを表示
+  workflow_dispatch:
   schedule:
-    - cron: '0 21 * * *' # 毎日、日本時間の朝6時に自動実行
+    - cron: '0 21 * * *'
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest # [絶対ルール] ubuntuではなくmacosを使う
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,7 +23,6 @@ jobs:
 
       - name: Run Akuh Observation
         env:
-          # ここにGeminiのキーとXの鍵がすべて揃っていることが重要です
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
