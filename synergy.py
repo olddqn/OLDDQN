@@ -3,7 +3,7 @@ import time
 import tweepy
 import google.generativeai as genai
 
-# 設定
+# Gemini設定
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 def main():
@@ -34,8 +34,8 @@ def main():
     ・ハッシュタグ、絵文字、感嘆符、丁寧語は禁止。独白として出力せよ。
     """
 
-    # 1. Geminiで生成（執念のリトライ機能）
-    model = genai.GenerativeModel('gemini-1.5-flash-8b')
+    # 1. Geminiで生成（モデル名をより汎用的なものに変更）
+    model = genai.GenerativeModel('gemini-1.5-flash')
     msg = ""
 
     for attempt in range(5):
@@ -45,7 +45,8 @@ def main():
             try:
                 msg = response.text.strip()
             except:
-                msg = response.candidates[0].content.parts[0].text.strip()
+                if response.candidates:
+                    msg = response.candidates[0].content.parts[0].text.strip()
             
             if msg:
                 print(f"✅ 生成成功: {msg}")
@@ -58,7 +59,7 @@ def main():
         print("❌ 生成に失敗しました。")
         return
 
-    # 2. X（Twitter）へ投稿
+    # 2. X（Twitter）へ投稿（先ほど成功した設定を使用）
     try:
         client = tweepy.Client(
             consumer_key=os.environ.get('X_API_KEY'),
@@ -67,7 +68,9 @@ def main():
             access_token_secret=os.environ.get('X_ACCESS_SECRET')
         )
         client.create_tweet(text=msg)
-        print("🚀 Xへの投稿に成功。あくうが世界に放たれました。")
+        print("🚀 大成功！あくうが世界に放たれました。")
     except Exception as e:
         print(f"❌ X投稿エラー: {e}")
-        # 401エラーが出る場合は、XのAccess Tokenを再発行して貼り直してください
+
+if __name__ == "__main__":
+    main()
