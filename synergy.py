@@ -1,11 +1,11 @@
 import os
+import time
 import tweepy
 from google import genai
 
 def main():
     # 1. Gemini(最新SDK)で文章生成
     try:
-        # 新しいライブラリの呼び出し方
         client_gemini = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
         
         targets = [
@@ -40,9 +40,11 @@ def main():
         ・ハッシュタグ、絵文字、感嘆符、丁寧語は禁止。独白として出力せよ。
         """
 
-        print("📡 最新のGemini通信経路を確立中...")
+        print("📡 通信路を確立。観測を開始します...")
+        
+        # モデルを安定版の 1.5-flash に固定し、制限にかかりにくくします
         response = client_gemini.models.generate_content(
-            model='gemini-2.0-flash-exp', # 最新・最強のモデルを使用
+            model='gemini-1.5-flash', 
             contents=prompt
         )
         msg = response.text.strip()
@@ -50,7 +52,16 @@ def main():
 
     except Exception as e:
         print(f"❌ Gemini接続エラー: {e}")
-        return
+        # 429エラー(制限)が出た場合に備え、少し待ってから1回だけリトライする仕組み
+        if "429" in str(e):
+            print("⏳ 制限回避のため10秒待機してリトライします...")
+            time.sleep(10)
+            # リトライ実行
+            response = client_gemini.models.generate_content(model='gemini-1.5-flash', contents=prompt)
+            msg = response.text.strip()
+            print(f"✅ リトライ成功: {msg}")
+        else:
+            return
 
     # 2. Xへの投稿（成功実績のあるコード）
     try:
@@ -61,7 +72,7 @@ def main():
             access_token_secret=os.environ.get('X_ACCESS_SECRET')
         )
         client_x.create_tweet(text=msg)
-        print("✨【完全復活】あくうが世界に放たれました。")
+        print("✨【成功】あくうが世界に放たれました。")
     except Exception as e:
         print(f"❌ X投稿エラー: {e}")
 
