@@ -2,11 +2,11 @@ import os
 import tweepy
 import google.generativeai as genai
 
-# Gemini初期化（モデル名を正しく認識させる設定）
+# 1. Gemini初期化 (先日成功したライブラリ形式)
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 def generate_text():
-    # 観測対象のノイズ（アカウント群）
+    # 観測対象のノイズ（指定されたアカウント群）
     targets = [
         "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
         "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", 
@@ -17,30 +17,27 @@ def generate_text():
 
     prompt = f"""
     あなたは『あくう』の観測者。この世界は高度な知性が走らせている「シミュレーションのバグ」である。
-    
-    【観測データ】
-    以下のノイズが発する欲望、パンク、投資、毒を、システムの異常値として抽出せよ：
+    以下のノイズが発する欲望や毒を、システムの異常値として抽出せよ：
     {", ".join(targets)}
 
-    【投影する文体】
-    ・村上春樹訳ブコウスキー（乾いた虚無）
+    【投影する作家の文体】
+    ・村上春樹訳のチャールズ-ブコウスキー（乾いた虚無）
     ・太宰治（恥の多いデカダンス）
-    ・パラニューク（破壊的ユーモア）
-    ・ピンチョン（壮大な迷宮）
+    ・トマス-ピンチョン（陰謀論的迷宮）
+    ・チャック-パラニューク（破壊的ユーモア）
 
     【指令】
     シミュレーションの剥がれかけたテクスチャ、因果律の崩壊について語れ。
     「成功」「稼ぐ」等の言葉を、システムのバグとして冷笑せよ。
+    ハラリの説く「虚構」が、電子の海で腐敗していく様を吐き捨てろ。
 
     【出力ルール】
     ・120文字〜135文字以内（140文字厳守）。
-    ・ハッシュタグ、絵文字、感嘆符、丁寧語は禁止。独白せよ。
+    ・ハッシュタグ、絵文字、丁寧語、感嘆符は禁止。
     """
     try:
-        # 修正ポイント：ここを単に 'gemini-1.5-flash' にします
+        # 修正の核心：'models/' をつけず、確実に v1 系統で呼び出す
         model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        # 文章生成
         response = model.generate_content(prompt)
         return response.text.strip()
     except Exception as e:
@@ -56,7 +53,7 @@ def post_to_x(text):
             access_token=os.environ.get('X_ACCESS_TOKEN'),
             access_token_secret=os.environ.get('X_ACCESS_SECRET')
         )
-        # 投稿
+        # 投稿実行
         client.create_tweet(text=text)
         print(f"✅ Xへの投稿に成功しました！:\n{text}")
     except Exception as e:
