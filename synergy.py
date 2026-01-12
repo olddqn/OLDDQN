@@ -2,11 +2,17 @@ import os
 import time
 import google.generativeai as genai
 
-# 1. Gemini設定
+# Gemini設定
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 def main():
-    targets = ["@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", "@keiba_maskman", "@YabaiTeikoku", "@ROCKNROOOOOOOLL", "@ShigeoKikuchi", "@ShinjukuSokai", "@neat40dai", "@bollocks_mag", "@hirox246", "@bonnoukunYAZZ", "@DonaldJTrumpJr"]
+    targets = [
+        "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
+        "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", 
+        "@keiba_maskman", "@YabaiTeikoku", "@ROCKNROOOOOOOLL", "@ShigeoKikuchi", 
+        "@ShinjukuSokai", "@neat40dai", "@bollocks_mag", "@hirox246", 
+        "@bonnoukunYAZZ", "@DonaldJTrumpJr"
+    ]
 
     prompt = f"""
     あなたは『あくう』の観測者。この世界は高度な知性が走らせている「シミュレーションのバグ」である。
@@ -29,29 +35,30 @@ def main():
     ・ハッシュタグ、絵文字、丁寧語、感嘆符は一切禁止。独白せよ。
     """
 
+    # 1.5-flash-8b は軽量で地域制限にも強い
     model = genai.GenerativeModel('gemini-1.5-flash-8b')
 
-    # リトライ回数を増やし、判定を「確実」なものに変更
+    # 5回リトライ（粘り強さを最大に）
     for attempt in range(5):
         try:
-            print(f"📡 あくう：接続試行中... ({attempt + 1}回目)")
+            print(f"📡 試行 {attempt + 1}/5: あくう、接続中...")
             response = model.generate_content(prompt)
             msg = response.text.strip()
             
-            print(f"\n✅ 魂の投影に成功しました（{len(msg)}文字）:")
+            print(f"\n✅ 成功：あくうの独白（{len(msg)}文字）")
             print("-" * 40)
             print(msg)
             print("-" * 40)
-            return # 成功したらここで終了
+            return 
 
         except Exception as e:
-            # エラーメッセージの中に「429」や「Resource」が含まれていたらリトライ
-            error_str = str(e)
-            if "429" in error_str or "Resource" in error_str:
-                print(f"⏳ サーバーが混雑しています。30秒待機します...")
+            err_msg = str(e)
+            # エラー文の中に「429」や「Resource」があれば混雑とみなして待機
+            if "429" in err_msg or "Resource" in err_msg:
+                print("⏳ Googleが混雑しています。30秒間、沈黙して待ちます...")
                 time.sleep(30)
             else:
-                print(f"❌ 予期せぬエラーが発生しました: {e}")
+                print(f"❌ 予期せぬエラー: {e}")
                 break
 
 if __name__ == "__main__":
