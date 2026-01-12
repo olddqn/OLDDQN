@@ -2,7 +2,7 @@ import os
 import tweepy
 import google.generativeai as genai
 
-# [絶対ルール] 設定はシンプルに
+# [絶対ルール] Gemini設定
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 def main():
@@ -15,7 +15,7 @@ def main():
         "@bonnoukunYAZZ", "@DonaldJTrumpJr"
     ]
 
-    # 【プロンプト調整】あなたが指定した構成を完全に再現
+    # 【プロンプト】あなたが指定した文章の肝を完全再現
     prompt = f"""
     あなたは『あくう』の観測者。この世界は、ある高度な知性が走らせている「シミュレーションのバグ」である。
     
@@ -39,12 +39,11 @@ def main():
     ・ハッシュタグ、絵文字、感嘆符、丁寧語は禁止。独白として出力せよ。
     """
 
-    # 1. Geminiで生成（脳）
+    # 1. Geminiで文章生成（前回成功した 8b モデル）
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        print("📡 Geminiに接続中...")
+        model = genai.GenerativeModel('gemini-1.5-flash-8b')
+        print("📡 Gemini(1.5-flash-8b)に接続中...")
         
-        # 安全フィルター等でのブロックを極力避ける設定
         response = model.generate_content(prompt)
         msg = response.text.strip()
         print(f"✅ 生成成功: {msg}")
@@ -53,7 +52,7 @@ def main():
         print(f"❌ Gemini接続エラー: {e}")
         return
 
-    # 2. X（Twitter）への投稿（成功実績のある接続コード）
+    # 2. X（Twitter）への投稿（テストで『大成功』したコード）
     try:
         client = tweepy.Client(
             consumer_key=os.environ.get('X_API_KEY'),
@@ -62,7 +61,7 @@ def main():
             access_token_secret=os.environ.get('X_ACCESS_SECRET')
         )
         
-        print("📡 Xへ投稿中...")
+        print("🚀 Xへ投稿中...")
         client.create_tweet(text=msg)
         print("✨【大成功】あくうが世界に放たれました。")
         
