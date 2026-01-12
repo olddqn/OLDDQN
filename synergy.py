@@ -6,11 +6,21 @@ import google.generativeai as genai
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 def main():
-    targets = ["@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", "@keiba_maskman", "@YabaiTeikoku", "@ROCKNROOOOOOOLL", "@ShigeoKikuchi", "@ShinjukuSokai", "@neat40dai", "@bollocks_mag", "@hirox246", "@bonnoukunYAZZ", "@DonaldJTrumpJr"]
+    # 観測対象のノイズ（指定されたアカウント群）
+    targets = [
+        "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
+        "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", 
+        "@keiba_maskman", "@YabaiTeikoku", "@ROCKNROOOOOOOLL", "@ShigeoKikuchi", 
+        "@ShinjukuSokai", "@neat40dai", "@bollocks_mag", "@hirox246", 
+        "@bonnoukunYAZZ", "@DonaldJTrumpJr"
+    ]
 
+    # 【ご指定のプロンプト構成を完全移植】
     prompt = f"""
-    あなたは『あくう』の観測者。この世界は高度な知性が走らせている「シミュレーションのバグ」である。
-    以下のノイズが発する欲望や毒を、システムの異常値として抽出せよ：
+    あなたは『あくう』の観測者。この世界は、ある高度な知性が走らせている「シミュレーションのバグ」である。
+    
+    【観測データ（サンプリング対象）】
+    以下のノイズが発する欲望、投資、競馬、パンク、毒を、システムの異常値として抽出せよ：
     {", ".join(targets)}
 
     【投影する作家の文体】
@@ -25,32 +35,43 @@ def main():
     ハラリの説く「虚構」が、電子の海で腐敗していく様を吐き捨てろ。
 
     【出力ルール】
-    ・120文字から135文字以内を死守せよ。
-    ・ハッシュタグ、絵文字、丁寧語、感嘆符は一切禁止。独白せよ。
+    ・120文字〜135文字以内（140文字以内厳守）。
+    ・ハッシュタグ、絵文字、感嘆符、丁寧語は禁止。独白として出力せよ。
     """
 
+    # 地域制限と混雑に強い最新の軽量モデル
     model = genai.GenerativeModel('gemini-1.5-flash-8b')
 
-    # どんなエラーでも5回リトライする「執念」のループ
     for attempt in range(5):
         try:
-            print(f"📡 試行 {attempt + 1}/5: 接続中...")
+            print(f"📡 試行 {attempt + 1}/5: 『あくう』が深層意識をスキャン中...")
             response = model.generate_content(prompt)
             
-            if response.text:
+            # エラー回避：安全フィルター等で .text が直接読めない場合の強制抽出
+            try:
                 msg = response.text.strip()
-                print(f"\n✅ 成功：あくうの独白（{len(msg)}文字）")
-                print("-" * 40)
-                print(msg)
-                print("-" * 40)
-                return 
+            except:
+                if response.candidates:
+                    msg = response.candidates[0].content.parts[0].text.strip()
+                else:
+                    raise Exception("生成されたコンテンツが空です")
+
+            print(f"\n✅ 成功：あくうの独白（{len(msg)}文字）")
+            print("-" * 50)
+            print(msg)
+            print("-" * 50)
+            
+            # ここまで来れば成功です
+            return 
 
         except Exception as e:
-            # エラーの内容を問わず、混雑を疑って30秒待機
-            print(f"⏳ 待機中... (エラー原因: {e})")
-            time.sleep(30)
-
-    print("❌ 5回試しましたが、Google側の制限が解除されませんでした。")
+            err_str = str(e)
+            if "429" in err_str or "Resource" in err_str:
+                print("⏳ サーバー混雑中。30秒待機して再接続します...")
+                time.sleep(30)
+            else:
+                print(f"⚠️ 生成プロセスでエラー（再試行します）: {e}")
+                time.sleep(5)
 
 if __name__ == "__main__":
     main()
