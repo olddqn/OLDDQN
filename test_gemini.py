@@ -1,31 +1,26 @@
 import os
 import google.generativeai as genai
-from google.generativeai.types import RequestOptions
 
 def test_connection():
-    print("🛠️ Gemini 接続テスト開始...")
+    print("🛠️ Gemini 接続テスト開始（原点回帰モード）...")
     
     try:
-        # APIキー設定
+        # ルール1: APIキーをシンプルに設定
         genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
         
-        # [絶対ルール] 404を回避するために v1 (安定版) を明示的に指定
+        # ルール2: モデル名は「gemini-1.5-flash」のみ（余計なパスを付けない）
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        print("📡 モデルを呼び出し中 (API Version: v1)...")
+        print("📡 接続試行中...")
         
-        # 最も軽いリクエストで接続確認
-        response = model.generate_content(
-            "Hello",
-            request_options=RequestOptions(api_version='v1')
-        )
+        # ルール3: 余計なRequestOptionsを使わず、直接生成を叩く
+        response = model.generate_content("Hello. Are you there?")
         
-        print(f"✅ 接続成功！応答: {response.text}")
-        print("--- これで『脳』は生きています ---")
+        print(f"✅ 成功！Geminiの応答: {response.text}")
+        print("\n✨ つながりました。この形が『絶対的なルール』です。")
 
     except Exception as e:
         print(f"❌ 接続失敗: {e}")
-        print("\n💡 ヒント: もし404が出るなら、APIキーが古いか、Google側のモデル名変更が反映されています。")
 
 if __name__ == "__main__":
     test_connection()
