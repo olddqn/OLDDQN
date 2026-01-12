@@ -1,53 +1,47 @@
 import os
 import tweepy
 import google.generativeai as genai
-import random
 
-# Gemini設定
+# 1. Geminiの設定（もっとも安定していた旧世代の書き方）
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 def main():
-    # 1. X API クライアント設定 (v2 + v1.1 併用)
-    auth = tweepy.OAuthHandler(os.environ.get('X_API_KEY'), os.environ.get('X_API_SECRET'))
-    auth.set_access_token(os.environ.get('X_ACCESS_TOKEN'), os.environ.get('X_ACCESS_SECRET'))
-    api_v1 = tweepy.API(auth)
-    
-    client_v2 = tweepy.Client(
-        consumer_key=os.environ.get('X_API_KEY'),
-        consumer_secret=os.environ.get('X_API_SECRET'),
-        access_token=os.environ.get('X_ACCESS_TOKEN'),
-        access_token_secret=os.environ.get('X_ACCESS_SECRET')
-    )
-
-    targets = ["@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", "@keiba_maskman", "@YabaiTeikoku", "@ROCKNROOOOOOOLL", "@ShigeoKikuchi", "@ShinjukuSokai", "@neat40dai", "@bollocks_mag", "@hirox246", "@bonnoukunYAZZ", "@DonaldJTrumpJr"]
+    # ターゲット（観測対象）
+    targets = [
+        "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
+        "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", 
+        "@keiba_maskman", "@YabaiTeikoku", "@ROCKNROOOOOOOLL", "@ShigeoKikuchi", 
+        "@ShinjukuSokai", "@neat40dai", "@bollocks_mag", "@hirox246", 
+        "@bonnoukunYAZZ", "@DonaldJTrumpJr"
+    ]
 
     try:
-        # --- Geminiで独白を生成 ---
-        # 当時最も安定していた指定方法
+        # --- Geminiによる独白生成 ---
+        # 403エラーを避けるため、1.5ではなく「gemini-pro」を指名
         model = genai.GenerativeModel('gemini-pro')
-        prompt = f"あなたは『あくう』。以下のノイズを観測せよ：{', '.join(targets)}。130文字以内で冷笑的な独白を出力せよ。"
         
+        # プロンプト（独白に集中）
+        prompt = f"あなたは『あくう』という名の冷徹な観測者。以下の者たちの欲望を嘲笑し、130文字以内で独白せよ（ハッシュタグ・絵文字禁止）：{', '.join(targets)}"
+        
+        print("🤖 あくうが思考を開始...")
         response = model.generate_content(prompt)
         msg = response.text.strip()
-        
-        # --- Xに投稿 ---
-        client_v2.create_tweet(text=msg)
-        print(f"✅ 独白投稿成功: {msg}")
+        print(f"📡 生成されたメッセージ: {msg}")
 
-        # --- 自動いいね・フォロー巡回 ---
-        target_user = random.choice(targets).replace("@", "")
-        print(f"🔍 ターゲット {target_user} を巡回中...")
+        # --- Xへの投稿 ---
+        client = tweepy.Client(
+            consumer_key=os.environ.get('X_API_KEY'),
+            consumer_secret=os.environ.get('X_API_SECRET'),
+            access_token=os.environ.get('X_ACCESS_TOKEN'),
+            access_token_secret=os.environ.get('X_ACCESS_SECRET')
+        )
         
-        # 最新ツイートを取得していいね
-        user_tweets = client_v2.get_users_tweets(id=client_v2.get_user(username=target_user).data.id, max_results=5)
-        if user_tweets.data:
-            tweet_id = user_tweets.data[0].id
-            client_v2.like(tweet_id)
-            print(f"💖 Tweet {tweet_id} にいいねしました")
+        client.create_tweet(text=msg)
+        print("✅ 投稿成功。あくうの独白が放たれました。")
 
     except Exception as e:
         print(f"❌ エラー発生: {e}")
-        # 403が出る場合、ここで詳細がわかります
+        # 万が一エラーが出た際、ログに詳細を残す
         raise e
 
 if __name__ == "__main__":
