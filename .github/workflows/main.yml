@@ -29,4 +29,4 @@ jobs:
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
-        run: python synergy.py # synergy.py を実行するように戻しました
+        run: python test_gemini.py
