@@ -16,7 +16,7 @@ def main():
         "@bonnoukunYAZZ", "@DonaldJTrumpJr"
     ]
 
-    # 魂のプロンプト
+    # あなたが指定した魂のプロンプト
     prompt = f"""
     あなたは『あくう』の観測者。この世界は、ある高度な知性が走らせている「シミュレーションのバグ」である。
     
@@ -40,20 +40,24 @@ def main():
     ・ハッシュタグ、絵文字、感嘆符、丁寧語は禁止。独白として出力せよ。
     """
 
-    # 1. Geminiで生成（404エラー対策：モデル名をフルパスで指定）
+    # 1. Geminiで生成（404エラー対策：最もシンプルな指定に変更）
     try:
-        # ここを 'models/gemini-1.5-flash' に戻すことで404を回避します
-        model = genai.GenerativeModel('models/gemini-1.5-flash')
+        # 現在の環境で404にならないための指定方法
+        model = genai.GenerativeModel('gemini-1.5-flash')
         print(f"📡 観測開始... Geminiに接続中")
         
-        response = model.generate_content(prompt)
+        # 執念の生成（安全性による拒否を回避するための設定）
+        response = model.generate_content(
+            prompt,
+            safety_settings=[
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+            ]
+        )
         
-        # テキスト抽出の安全策
-        if hasattr(response, 'text'):
-            msg = response.text.strip()
-        else:
-            msg = response.candidates[0].content.parts[0].text.strip()
-            
+        msg = response.text.strip()
         print(f"✅ 生成成功: {msg}")
         
     except Exception as e:
