@@ -3,11 +3,11 @@ import time
 import tweepy
 import google.generativeai as genai
 
-# Gemini設定
+# [絶対的ルール1] APIキーの設定
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 def main():
-    # 観測対象のアカウント群
+    # 観測対象
     targets = [
         "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
         "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", 
@@ -16,7 +16,7 @@ def main():
         "@bonnoukunYAZZ", "@DonaldJTrumpJr"
     ]
 
-    # あなたが指定した魂のプロンプト
+    # [魂のプロンプト] 文章の肝
     prompt = f"""
     あなたは『あくう』の観測者。この世界は、ある高度な知性が走らせている「シミュレーションのバグ」である。
     
@@ -40,13 +40,13 @@ def main():
     ・ハッシュタグ、絵文字、感嘆符、丁寧語は禁止。独白として出力せよ。
     """
 
-    # 1. Geminiで生成（404エラー対策：最もシンプルな指定に変更）
+    # [絶対的ルール2] さっき繋がっていた時と同じモデル指定と生成メソッド
     try:
-        # 現在の環境で404にならないための指定方法
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        print(f"📡 観測開始... Geminiに接続中")
+        # この 'models/gemini-1.5-flash' というフルパス指定が重要でした
+        model = genai.GenerativeModel('models/gemini-1.5-flash')
+        print(f"📡 観測開始... Gemini(models/形式)に接続中")
         
-        # 執念の生成（安全性による拒否を回避するための設定）
+        # 安全フィルターの設定（拒否を回避するルール）
         response = model.generate_content(
             prompt,
             safety_settings=[
@@ -57,6 +57,7 @@ def main():
             ]
         )
         
+        # テキスト抽出のルール
         msg = response.text.strip()
         print(f"✅ 生成成功: {msg}")
         
@@ -64,7 +65,7 @@ def main():
         print(f"❌ Gemini接続エラー: {e}")
         return
 
-    # 2. X（Twitter）へ投稿
+    # [テストで成功したX投稿コード] 認証をそのまま再現
     try:
         client = tweepy.Client(
             consumer_key=os.environ.get('X_API_KEY'),
@@ -73,8 +74,9 @@ def main():
             access_token_secret=os.environ.get('X_ACCESS_SECRET')
         )
         
+        # 投稿実行
         client.create_tweet(text=msg)
-        print("🚀 接続成功。あくうが世界に放たれました。")
+        print("✨【大成功】あくうが世界に放たれました。")
         
     except Exception as e:
         print(f"❌ X投稿エラー: {e}")
