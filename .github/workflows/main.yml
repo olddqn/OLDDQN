@@ -1,4 +1,4 @@
-name: Synergy Test
+name: Synergy Automation
 
 on:
   workflow_dispatch:
@@ -11,12 +11,21 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.9' # または '3.10' '3.11'
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install google-generativeai  # ここを標準ライブラリに変更
+          pip install google-generativeai tweepy Pillow requests # 追加: Pillow と requests
       - name: Run synergy
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
         run: python synergy.py
+      - name: Upload Image Artifact
+        uses: actions/upload-artifact@v4 # 画像をGitHub Actionsの成果物としてアップロード
+        with:
+          name: generated-punk-image
+          path: output.png
