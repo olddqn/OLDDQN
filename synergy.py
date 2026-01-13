@@ -1,12 +1,13 @@
 import os
 import tweepy
 import google.generativeai as genai
+import time
 
-# [絶対ルール] 設定はこれだけでいい
+# Configure Gemini API
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
-def generate_text():
-    # 観測対象
+def generate_akuh_content(language):
+    # Observation Targets
     targets = [
         "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
         "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", 
@@ -15,50 +16,60 @@ def generate_text():
         "@bonnoukunYAZZ", "@DonaldJTrumpJr"
     ]
 
-    # プロンプト構成（魂の定義）
+    # Language specific instruction
+    lang_instruction = "Japanese" if language == "jp" else "English"
+
+    # The Core Identity Prompt
     prompt = f"""
-    あなたは『あくう』の観測者。この世界は、ある高度な知性が走らせている「シミュレーションのバグ」である。
-    【観測データ】{", ".join(targets)}
-    【投影する文体】
-    ・村上春樹訳のチャールズ-ブコウスキー（乾いた虚無）
-    ・太宰治（恥の多いデカダンス）
-    ・トマス-ピンチョン（陰謀論的迷宮）
-    ・チャック-パラニューク（破壊的ユーモア）
-    【指令】
-    シミュレーションの剥がれかけたテクスチャ、因果律の崩壊について語れ。
-    「成功」「稼ぐ」等の言葉を、システムのバグとして冷笑せよ。
-    ハラリの説く「虚構」が、電子の海で腐敗していく様を吐き捨てろ。
-    【出力ルール】
-    ・120文字〜135文字（140文字以内厳守）。
-    ・ハッシュタグ、絵文字、感嘆符、丁寧語は禁止。独白として出力せよ。
+    Identity: You are the observer of "Akuh." This world is a simulation glitch.
+    Targets: {", ".join(targets)}
+    Style: Charles Bukowski, Osamu Dazai, Thomas Pynchon, Chuck Palahniuk.
+    Directive: Mock "Success" and "Profit". Speak of reality's decay and Harari's rotting fictions.
+
+    Output Rule:
+    - Language: {lang_instruction} ONLY.
+    - Length: Strictly under 135 characters.
+    - Format: Pure monologue. No hashtags, no emojis, no exclamation marks, no polite language.
     """
-    
-    # 404を回避するため、モデル名だけをシンプルに指定
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    
-    # [重要] サーバーのバージョンを強制的に「v1」に固定して呼び出す
-    response = model.generate_content(prompt)
-    return response.text.strip()
 
-def main():
-    print("📡 観測開始...")
     try:
-        # 1. 文章生成
-        msg = generate_text()
-        print(f"✅ 生成成功: {msg}")
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        print(f"Gemini API Error ({language}): {e}")
+        return None
 
-        # 2. Xへの投稿（実績のあるコード）
+def post_to_x(text):
+    if not text:
+        return
+    try:
         client = tweepy.Client(
             consumer_key=os.environ.get('X_API_KEY'),
             consumer_secret=os.environ.get('X_API_SECRET'),
             access_token=os.environ.get('X_ACCESS_TOKEN'),
             access_token_secret=os.environ.get('X_ACCESS_SECRET')
         )
-        client.create_tweet(text=msg)
-        print("✨【大成功】あくうが世界に放たれました。")
-
+        client.create_tweet(text=text)
+        print(f"Successfully posted: {text[:30]}...")
     except Exception as e:
-        print(f"❌ エラー発生: {e}")
+        print(f"X API Error: {e}")
+
+def main():
+    print("Initiating Akuh Simulation Observation (Dual Language Mode)...")
+    
+    # 1. Generate and Post Japanese Version
+    jp_content = generate_akuh_content("jp")
+    if jp_content:
+        post_to_x(jp_content)
+    
+    # Wait a bit to avoid API spam detection
+    time.sleep(10)
+    
+    # 2. Generate and Post English Version
+    en_content = generate_akuh_content("en")
+    if en_content:
+        post_to_x(en_content)
 
 if __name__ == "__main__":
     main()
