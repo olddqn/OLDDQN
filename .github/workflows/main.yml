@@ -3,12 +3,9 @@ name: Akuh Simulation Daily Observation
 on:
   workflow_dispatch:
   schedule:
-    # 1. 22:00 UTC (07:00 JST)
-    - cron: '0 22 * * *'
-    # 2. 03:00 UTC (12:00 JST)
-    - cron: '0 3 * * *'
-    # 3. 12:00 UTC (21:00 JST)
-    - cron: '0 12 * * *'
+    - cron: '0 22 * * *' # 07:00 JST
+    - cron: '0 3 * * *'  # 12:00 JST
+    - cron: '0 12 * * *' # 21:00 JST
 
 jobs:
   observe_and_post:
@@ -20,10 +17,12 @@ jobs:
       - name: Setup Python Environment
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install Dependencies
-        run: pip install tweepy google-generativeai
+        run: |
+          pip install --upgrade pip
+          pip install tweepy google-genai
 
       - name: Execute Akuh Synergy
         env:
