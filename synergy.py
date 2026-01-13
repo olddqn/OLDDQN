@@ -33,9 +33,10 @@ def generate_akuh_content(language):
     """
 
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt)
-        return response.text.strip()
+     model = genai.GenerativeModel(
+    model_name='models/gemini-1.5-flash'）
+    response = model.generate_content(prompt)
+    　 return response.text.strip()
     except Exception as e:
         print(f"Gemini API Error ({language}): {e}")
         return None
