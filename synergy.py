@@ -1,11 +1,14 @@
 import os
 import tweepy
-from google import genai
 import time
+from google import genai
 
 def generate_akuh_content(language):
-    # API Client Setup (Latest SDK)
-    client_gemini = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
+    # Forced use of API version 'v1' to avoid the 404/v1beta ghost
+    client = genai.Client(
+        api_key=os.environ.get('GEMINI_API_KEY'),
+        http_options={'api_version': 'v1'}
+    )
     
     targets = [
         "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
@@ -17,7 +20,6 @@ def generate_akuh_content(language):
 
     lang_instruction = "Japanese" if language == "jp" else "English"
 
-    # The Soul of Akuh - English Prompt
     prompt = f"""
     Identity: You are the observer of "Akuh." This world is a simulation glitch.
     Targets: {", ".join(targets)}
@@ -26,12 +28,12 @@ def generate_akuh_content(language):
     Output Rule:
     - Language: {lang_instruction} ONLY.
     - Length: Strictly under 135 characters.
-    - Format: Pure monologue. No hashtags, no emojis, no exclamation marks, no polite language.
+    - Format: Pure monologue. No hashtags, no emojis, no exclamation marks.
     """
 
     try:
-        # Calling the most stable model with the new SDK
-        response = client_gemini.models.generate_content(
+        # Calling the modern gateway
+        response = client.models.generate_content(
             model='gemini-1.5-flash',
             contents=prompt
         )
@@ -41,8 +43,7 @@ def generate_akuh_content(language):
         return None
 
 def post_to_x(text):
-    if not text:
-        return
+    if not text: return
     try:
         client_x = tweepy.Client(
             consumer_key=os.environ.get('X_API_KEY'),
@@ -56,19 +57,17 @@ def post_to_x(text):
         print(f"X API Error: {e}")
 
 def main():
-    print("Initiating Akuh Simulation Observation (Dual Language Mode)...")
+    print("Initiating Akuh Observation (Modern Gateway)...")
     
-    # 1. Post Japanese version
-    jp_content = generate_akuh_content("jp")
-    if jp_content:
-        post_to_x(jp_content)
+    # 1. Japanese Monologue
+    jp = generate_akuh_content("jp")
+    if jp: post_to_x(jp)
     
-    time.sleep(10) # Cooling time
+    time.sleep(15) # Wait to avoid rate limit
     
-    # 2. Post English version
-    en_content = generate_akuh_content("en")
-    if en_content:
-        post_to_x(en_content)
+    # 2. English Monologue
+    en = generate_akuh_content("en")
+    if en: post_to_x(en)
 
 if __name__ == "__main__":
     main()
