@@ -1,30 +1,30 @@
-name: Akuh Simulation Daily Observation
+name: Akuh Final Observation
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 22 * * *' # 07:00 JST
-    - cron: '0 3 * * *'  # 12:00 JST
-    - cron: '0 12 * * *' # 21:00 JST
+    - cron: "0 22,3,12 * * *" # 07:00, 12:00, 21:00 JST
+  workflow_dispatch:
 
 jobs:
-  observe_and_post:
-    # [CRITICAL] Switch to macOS to bypass IP-based API restrictions
-    runs-on: macos-latest
+  run:
+    runs-on: ubuntu-latest
+    env:
+      # ★隠れたv1beta汚染をここで物理的に遮断
+      GOOGLE_API_VERSION: v1
+      GOOGLE_GENAI_ENDPOINT: https://generativelanguage.googleapis.com
+      
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      X_API_KEY: ${{ secrets.X_API_KEY }}
+      X_API_SECRET: ${{ secrets.X_API_SECRET }}
+      X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+      X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      - name: Install Dependencies
-        run: pip install tweepy google-genai
-      - name: Execute
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          X_API_KEY: ${{ secrets.X_API_KEY }}
-          X_API_SECRET: ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install google-genai tweepy
+      - name: Run Akuh
         run: python synergy.py
