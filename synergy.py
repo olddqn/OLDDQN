@@ -4,11 +4,8 @@ import time
 from google import genai
 
 def generate_akuh_content(language):
-    # Forced use of API version 'v1' to avoid the 404/v1beta ghost
-    client = genai.Client(
-        api_key=os.environ.get('GEMINI_API_KEY'),
-        http_options={'api_version': 'v1'}
-    )
+    # Initialize modern client
+    client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
     
     targets = [
         "@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", 
@@ -20,6 +17,7 @@ def generate_akuh_content(language):
 
     lang_instruction = "Japanese" if language == "jp" else "English"
 
+    # THE SOUL OF AKUH
     prompt = f"""
     Identity: You are the observer of "Akuh." This world is a simulation glitch.
     Targets: {", ".join(targets)}
@@ -28,11 +26,11 @@ def generate_akuh_content(language):
     Output Rule:
     - Language: {lang_instruction} ONLY.
     - Length: Strictly under 135 characters.
-    - Format: Pure monologue. No hashtags, no emojis, no exclamation marks.
+    - Format: Pure monologue. No hashtags, no emojis, no polite words.
     """
 
     try:
-        # Calling the modern gateway
+        # Using the most stable production model name
         response = client.models.generate_content(
             model='gemini-1.5-flash',
             contents=prompt
@@ -52,20 +50,20 @@ def post_to_x(text):
             access_token_secret=os.environ.get('X_ACCESS_SECRET')
         )
         client_x.create_tweet(text=text)
-        print(f"Successfully posted: {text[:30]}...")
+        print(f"Successfully posted to X")
     except Exception as e:
         print(f"X API Error: {e}")
 
 def main():
-    print("Initiating Akuh Observation (Modern Gateway)...")
+    print("Initiating Akuh Observation...")
     
-    # 1. Japanese Monologue
+    # 1. Japanese
     jp = generate_akuh_content("jp")
     if jp: post_to_x(jp)
     
-    time.sleep(15) # Wait to avoid rate limit
+    time.sleep(15)
     
-    # 2. English Monologue
+    # 2. English
     en = generate_akuh_content("en")
     if en: post_to_x(en)
 
