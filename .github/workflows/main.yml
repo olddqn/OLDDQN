@@ -13,18 +13,13 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
-      - name: Setup Python Environment
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Install Dependencies
-        run: |
-          pip install --upgrade pip
-          pip install tweepy google-genai
-
-      - name: Execute Akuh Synergy
+        run: pip install tweepy google-genai
+      - name: Execute
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           X_API_KEY: ${{ secrets.X_API_KEY }}
