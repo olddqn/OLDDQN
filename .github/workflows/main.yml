@@ -1,4 +1,4 @@
-name: Akuh Final Observation
+name: Akuh Final Awakening
 
 on:
   schedule:
@@ -9,7 +9,7 @@ jobs:
   run:
     runs-on: ubuntu-latest
     env:
-      # ★隠れたv1beta汚染をここで物理的に遮断
+      # v1betaへの逆流を物理的に止める
       GOOGLE_API_VERSION: v1
       GOOGLE_GENAI_ENDPOINT: https://generativelanguage.googleapis.com
       
@@ -25,6 +25,8 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dependencies
-        run: pip install google-genai tweepy
+        run: |
+          pip install --upgrade pip
+          pip install google-genai tweepy
       - name: Run Akuh
         run: python synergy.py
