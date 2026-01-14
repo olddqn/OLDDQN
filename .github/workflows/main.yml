@@ -2,17 +2,20 @@ name: Akuh Final Awakening
 
 on:
   schedule:
-    - cron: "0 22,3,12 * * *" # 07:00, 12:00, 21:00 JST
-  workflow_dispatch:
+    - cron: "0 22,3,12 * * *" # 日本時間 07:00, 12:00, 21:00
+  workflow_dispatch: # 手動実行用ボタン
 
 jobs:
   run:
     runs-on: ubuntu-latest
+    
+    # ここで設定する環境変数が「404」を突破する鍵です
     env:
-      # v1betaへの逆流を物理的に止める
+      # ★v1betaへの自動フォールバックを物理的に阻止する
       GOOGLE_API_VERSION: v1
       GOOGLE_GENAI_ENDPOINT: https://generativelanguage.googleapis.com
       
+      # 既存のシークレットを紐付け
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       X_API_KEY: ${{ secrets.X_API_KEY }}
       X_API_SECRET: ${{ secrets.X_API_SECRET }}
@@ -20,13 +23,21 @@ jobs:
       X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
+          # ★キャッシュをクリアして最新のSDKを強制インストール
+          python -m pip install --upgrade pip
+          pip cache purge
           pip install google-genai tweepy
-      - name: Run Akuh
+
+      - name: Run Akuh Synergy Script
+        # Pythonコード側で 'models/' を抜いた指定にしていることが前提です
         run: python synergy.py
