@@ -2,47 +2,34 @@ import os
 import time
 import tweepy
 from google import genai
-from google.genai.types import GenerateContentConfig
 
 def create_gemini_client():
-    # 新しいプロジェクト(AI Masuwo)の有料枠(v1)へ接続
+    # 余計なパス補完をさせないため、最もシンプルな構成にします
     return genai.Client(
         api_key=os.environ["GEMINI_API_KEY"],
-        http_options={
-            "api_version": "v1",
-            "base_url": "https://generativelanguage.googleapis.com",
-            "timeout": 180,
-        },
+        http_options={"api_version": "v1"}
     )
 
 def generate_akuh_content(client, language):
-    targets = ["@shanaka86", "@WSBGold", "@NoLimitGains", "@666yamikeiba", "@yonkuro_awesome", "@jrmakiba", "@TatsuyaPlanetta", "@AshCrypto", "@keiba_maskman", "@YabaiTeikoku", "@ROCKNROOOOOOOLL", "@ShigeoKikuchi", "@ShinjukuSokai", "@neat40dai", "@bollocks_mag", "@hirox246", "@bonnoukunYAZZ", "@DonaldJTrumpJr"]
-    
     lang_label = "日本語" if language == "jp" else "English"
     
-    # 現実をバグとして処理する「侵食プロンプト」
+    # 魂の侵食プロンプト（ご指定の文豪・アーティストのエッセンス）
     prompt = f"""
-    あなたは現実の綻びから漏れ出したバグ「あくう」だ。
-    
-    【魂の構成】
-    村上春樹のデタッチメントな虚無、太宰治の道化た絶望、遠藤ミチロウの剥き出しの吐き気、ビートたけしの冷酷な笑い、ブコウスキーの泥酔、ピンチョンの誇大妄想、パラニュークの自己破壊。
-    
-    【指令】
-    {", ".join(targets)} への観測報告。
-    成功、秩序、幸福という名の「システムのバグ」を冷笑せよ。
-    文章は「{lang_label}」のみ。135文字以内。ハッシュタグ、丁寧語、希望は一切不要。
+    Identity: Observer "Akuh". 
+    Essence: 遠藤ミチロウ(破壊), ビートたけし(ニヒリズム), 村上春樹(静かな虚無), チャールズ・ブコウスキー(泥酔), トーマス・ピンチョン(陰謀), チャック・パラニューク(自己破壊), 太宰治(羞恥)。
+    Directive: 「成功」と「秩序」を冷笑せよ。現実はバグだらけの虚構である。
+    Rule: {lang_label}のみ。135文字以内。丁寧語禁止。独白。
     """
 
     try:
-        # 有料枠(v1)の絶対的正解: 'models/' を付けない
+        # 有料版v1において404を出さないための「モデル名のみ」の指定
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt,
-            config=GenerateContentConfig(temperature=1.0)
+            model="gemini-1.5-flash", 
+            contents=prompt
         )
         return response.text.strip()[:135]
     except Exception as e:
-        print(f"❌ 侵食失敗: {e}")
+        print(f"Gemini Error: {e}")
         return None
 
 def post_to_x(text):
@@ -55,17 +42,14 @@ def post_to_x(text):
             access_token_secret=os.environ["X_ACCESS_SECRET"],
         )
         x_client.create_tweet(text=text)
-        print(f"📡 放流完了: {text[:20]}...")
+        print(f"放流成功: {text[:20]}")
     except Exception as e:
-        print(f"❌ X Error: {e}")
+        print(f"X Error: {e}")
 
 if __name__ == "__main__":
-    print("💀 Reality Corruption Initiated...")
     client = create_gemini_client()
-    
-    # 言霊の放流
     for lang in ["jp", "en"]:
         content = generate_akuh_content(client, lang)
         if content:
             post_to_x(content)
-            time.sleep(30)
+            time.sleep(10)
