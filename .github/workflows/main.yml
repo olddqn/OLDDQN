@@ -1,43 +1,21 @@
-name: Akuh Final Awakening
+name: Akuh Solo Diagnostics
 
 on:
-  schedule:
-    - cron: "0 22,3,12 * * *" # 日本時間 07:00, 12:00, 21:00
-  workflow_dispatch: # 手動実行用ボタン
+  workflow_dispatch: # 手動実行ボタンのみ
 
 jobs:
-  run:
+  diagnose:
     runs-on: ubuntu-latest
-    
-    # ここで設定する環境変数が「404」を突破する鍵です
     env:
-      # ★v1betaへの自動フォールバックを物理的に阻止する
-      GOOGLE_API_VERSION: v1
-      GOOGLE_GENAI_ENDPOINT: https://generativelanguage.googleapis.com
-      
-      # 既存のシークレットを紐付け
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      X_API_KEY: ${{ secrets.X_API_KEY }}
-      X_API_SECRET: ${{ secrets.X_API_SECRET }}
-      X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-      X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
-      - name: Install dependencies
+      - name: Force Clean Install
         run: |
-          # ★キャッシュをクリアして最新のSDKを強制インストール
-          python -m pip install --upgrade pip
           pip cache purge
-          pip install google-genai tweepy
-
-      - name: Run Akuh Synergy Script
-        # Pythonコード側で 'models/' を抜いた指定にしていることが前提です
+          pip install google-genai
+      - name: Run Solo Akuh
         run: python synergy.py
