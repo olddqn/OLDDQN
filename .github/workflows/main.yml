@@ -1,7 +1,5 @@
-name: Gemini to X Bot
+name: Akuh Final Release
 on:
-  schedule:
-    - cron: "0 */6 * * *" # 6時間ごと
   workflow_dispatch:
 jobs:
   run:
@@ -13,8 +11,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dependencies
-        run: |
-          pip install google-genai tweepy
+        run: pip install google-genai tweepy
       - name: Run bot
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
