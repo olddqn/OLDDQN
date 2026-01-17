@@ -1,23 +1,21 @@
 import os, requests
 
-# 新しく作ったキー（...9oFY）をGitHubに登録している前提です
 key = os.environ.get("GEMINI_API_KEY")
 
-# URLを極限までシンプルにします（v1betaを使用）
-url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
+# 候補を3つ用意しました。どれかがヒットすれば勝ちです。
+names = ["models/gemini-1.5-flash-latest", "models/gemini-pro", "gemini-1.5-flash"]
 
-payload = {
-    "contents": [{"parts": [{"text": "「あくう」として一言。"}]}]
-}
+for name in names:
+    print(f"📡 試行中: {name}")
+    url = f"https://generativelanguage.googleapis.com/v1beta/{name}:generateContent?key={key}"
+    payload = {"contents": [{"parts": [{"text": "「あくう」として一言。"}]}]}
+    
+    res = requests.post(url, json=payload)
+    if res.status_code == 200:
+        print(f"✅ ついに突破！回答:")
+        print(res.json()['candidates'][0]['content']['parts'][0]['text'])
+        exit(0)
+    else:
+        print(f"❌ {name} はダメでした (Status: {res.status_code})")
 
-print("📡 接続テストを開始...")
-
-res = requests.post(url, json=payload)
-
-print(f"ステータスコード: {res.status_code}")
-if res.status_code == 200:
-    print("✅ 成功！Geminiの回答:")
-    print(res.json()['candidates'][0]['content']['parts'][0]['text'])
-else:
-    print("❌ まだダメです。エラー詳細:")
-    print(res.text)
+print("💣 全滅。Google側の反映待ちか、アカウント固有の制限です。")
