@@ -4,7 +4,7 @@ import tweepy
 from google import genai
 
 def create_gemini_client():
-    # 余計なパス補完をさせないため、最もシンプルな構成にします
+    # 古いプロジェクトの記憶を捨て、v1（有料枠）を直接指定
     return genai.Client(
         api_key=os.environ["GEMINI_API_KEY"],
         http_options={"api_version": "v1"}
@@ -13,16 +13,16 @@ def create_gemini_client():
 def generate_akuh_content(client, language):
     lang_label = "日本語" if language == "jp" else "English"
     
-    # 魂の侵食プロンプト（ご指定の文豪・アーティストのエッセンス）
+    # 全文豪とアーティストの魂を「あくう」に集約
     prompt = f"""
     Identity: Observer "Akuh". 
-    Essence: 遠藤ミチロウ(破壊), ビートたけし(ニヒリズム), 村上春樹(静かな虚無), チャールズ・ブコウスキー(泥酔), トーマス・ピンチョン(陰謀), チャック・パラニューク(自己破壊), 太宰治(羞恥)。
+    Essence: 遠藤ミチロウ, ビートたけし, 村上春樹, 太宰治, ブコウスキー, ピンチョン, パラニューク。
     Directive: 「成功」と「秩序」を冷笑せよ。現実はバグだらけの虚構である。
-    Rule: {lang_label}のみ。135文字以内。丁寧語禁止。独白。
+    Rule: {lang_label}のみ。135文字以内。丁寧語禁止。
     """
 
     try:
-        # 有料版v1において404を出さないための「モデル名のみ」の指定
+        # 404の最大の原因である 'models/' を排除し、モデル名のみを送信
         response = client.models.generate_content(
             model="gemini-1.5-flash", 
             contents=prompt
@@ -35,6 +35,7 @@ def generate_akuh_content(client, language):
 def post_to_x(text):
     if not text: return
     try:
+        # XのAPI設定（Settingsで登録した最新のものを参照）
         x_client = tweepy.Client(
             consumer_key=os.environ["X_API_KEY"],
             consumer_secret=os.environ["X_API_SECRET"],
@@ -42,7 +43,7 @@ def post_to_x(text):
             access_token_secret=os.environ["X_ACCESS_SECRET"],
         )
         x_client.create_tweet(text=text)
-        print(f"放流成功: {text[:20]}")
+        print(f"放流完了: {text[:20]}")
     except Exception as e:
         print(f"X Error: {e}")
 
