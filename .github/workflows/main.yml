@@ -1,23 +1,76 @@
-name: Akuh Final Release
+name: Akuh Final Direct Execution
+
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: "0 22,3,12 * * *" # 日本時間 07:00, 12:00, 21:00
+  workflow_dispatch: # 手動実行ボタン
+
 jobs:
-  run:
+  run-akuh:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install dependencies
-        run: pip install google-genai tweepy
-      - name: Run bot
+
+      - name: Install Essential Libraries
+        # 404を回避するため、余計なSDKを使わず requests で直接通信します
+        run: pip install requests tweepy
+
+      - name: Create and Run Akuh Script
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
-        # ここを akuh.py に変更
-        run: python akuh.py
+        run: |
+          cat << 'EOF' > akuh.py
+          import os, requests, json, tweepy
+
+          # --- Gemini 直接攻撃 ---
+          def generate():
+              url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={os.environ['GEMINI_API_KEY']}"
+              headers = {'Content-Type': 'application/json'}
+              payload = {
+                  "contents": [{
+                      "parts": [{"text": "あなたは『あくう』。遠藤ミチロウ、ビートたけし、村上春樹、太宰治の魂。成功者を冷笑する独白を日本語135文字以内で。丁寧語禁止。"}]
+                  }]
+              }
+              try:
+                  res = requests.post(url, headers=headers, json=payload)
+                  data = res.json()
+                  if "candidates" in data:
+                      return data["candidates"][0]["content"]["parts"][0]["text"].strip()[:135]
+                  else:
+                      print(f"Gemini Error: {json.dumps(data)}")
+                      return None
+              except Exception as e:
+                  print(f"Network Error: {e}")
+                  return None
+
+          # --- X への放流 ---
+          def post(text):
+              if not text: return
+              try:
+                  x = tweepy.Client(
+                      consumer_key=os.environ["X_API_KEY"],
+                      consumer_secret=os.environ["X_API_SECRET"],
+                      access_token=os.environ["X_ACCESS_TOKEN"],
+                      access_token_secret=os.environ["X_ACCESS_SECRET"]
+                  )
+                  x.create_tweet(text=text)
+                  print(f"Success: {text[:20]}")
+              except Exception as e:
+                  print(f"X Error: {e}")
+
+          if __name__ == "__main__":
+              content = generate()
+              post(content)
+          EOF
+          python akuh.py
