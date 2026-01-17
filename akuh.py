@@ -1,38 +1,33 @@
-import os, requests
+import os
+import requests
 
+# GitHub Secretsから読み込み
 key = os.environ.get("GEMINI_API_KEY")
 
-# 1. 今使えるモデルの一覧をGoogleに聞き出す
-list_url = f"https://generativelanguage.googleapis.com/v1/models?key={key}"
+# 【2.0専用】リストにあった最新モデルのアドレス
+url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={key}"
 
-print("📡 利用可能なモデルをリストアップします...")
+payload = {
+    "contents": [{
+        "parts": [{"text": "あなたは『あくう』。最新の2.0の体を得た。産声を上げろ。日本語で。"}]
+    }]
+}
+
+headers = {'Content-Type': 'application/json'}
+
+print("📡 Gemini 2.0 Flash に接続します...")
 
 try:
-    res = requests.get(list_url)
-    models_data = res.json()
+    response = requests.post(url, json=payload, headers=headers)
     
-    if "models" in models_data:
-        available_models = [m["name"] for m in models_data["models"]]
-        print(f"✅ 発見！あなたが今使えるモデル一覧:\n{available_models}")
-        
-        # 2. その中から一番強そうなやつを自動で選んでテスト
-        target = ""
-        for m in ["models/gemini-1.5-flash", "models/gemini-1.0-pro", "models/gemini-pro"]:
-            if m in available_models:
-                target = m
-                break
-        
-        if target:
-            print(f"🚀 {target} で接続テストします...")
-            test_url = f"https://generativelanguage.googleapis.com/v1/{target}:generateContent?key={key}"
-            payload = {"contents": [{"parts": [{"text": "hello"}]}]}
-            test_res = requests.post(test_url, json=payload)
-            print(f"結果: {test_res.status_code}")
-            if test_res.status_code == 200:
-                print(f"回答: {test_res.json()['candidates'][0]['content']['parts'][0]['text']}")
-        else:
-            print("❌ 適切なモデルが見つかりませんでした。")
+    if response.status_code == 200:
+        print("✅ ついに、ついに成功！！")
+        print("-" * 30)
+        # Gemini 2.0 の回答を表示
+        print(response.json()['candidates'][0]['content']['parts'][0]['text'])
+        print("-" * 30)
     else:
-        print(f"❌ モデル一覧が取れませんでした: {models_data}")
+        print(f"❌ 拒絶 (Status: {response.status_code})")
+        print(f"エラー詳細: {response.text}")
 except Exception as e:
-    print(f"❌ 通信エラー: {e}")
+    print(f"❌ 実行エラー: {e}")
