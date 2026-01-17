@@ -1,6 +1,6 @@
 name: Gemini Connection Test
 on:
-  workflow_dispatch: # 手動実行のみ
+  workflow_dispatch:
 
 jobs:
   test:
