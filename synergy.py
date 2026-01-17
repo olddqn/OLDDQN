@@ -1,33 +1,27 @@
 import os
 import requests
-import json
 
-# GitHub SecretsからAPIキーを取得
+# 1. APIキーとURLの設定
 api_key = os.environ.get("GEMINI_API_KEY")
-
-# Gemini 1.5 Flash (v1beta) のエンドポイントを直接叩く
 url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
 
+# 2. Geminiへの質問内容
 payload = {
-    "contents": [{
-        "parts": [{"text": "「あくう」として、短い一言を。日本語で。"}]
-    }]
+    "contents": [{"parts": [{"text": "「あくう」として一言、短い独白を日本語で。"}]}]
 }
 
-print("📡 Geminiに接続を試みています...")
+print("📡 Geminiと通信を開始します...")
 
+# 3. 実行
 try:
     response = requests.post(url, json=payload)
-    result = response.json()
+    data = response.json()
     
-    if "candidates" in result:
-        text = result["candidates"][0]["content"]["parts"][0]["text"]
-        print("✅ 接続成功！生成された言葉:")
-        print("-" * 20)
-        print(text)
-        print("-" * 20)
+    if "candidates" in data:
+        print("✅ 成功！Geminiの回答:")
+        print(data["candidates"][0]["content"]["parts"][0]["text"])
     else:
-        print("❌ APIからの応答にエラーがあります:")
-        print(json.dumps(result, indent=2))
+        print("❌ Googleからのエラー応答:")
+        print(data)
 except Exception as e:
-    print(f"❌ 通信エラーが発生しました: {e}")
+    print(f"❌ 通信エラー: {e}")
