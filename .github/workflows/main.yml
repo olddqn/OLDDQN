@@ -16,4 +16,4 @@ jobs:
       - name: Run Test
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python synergy.py
+        run: python akuh.py  # ここが重要です
