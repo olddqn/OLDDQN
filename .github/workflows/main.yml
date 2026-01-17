@@ -5,6 +5,8 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
+      - name: Install dependencies
+        run: pip install requests tweepy
       - name: Execute Akuh
         env:
           G_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -14,25 +16,24 @@ jobs:
           X_ACC: ${{ secrets.X_ACCESS_SECRET }}
         shell: python
         run: |
-          import os, requests, json, tweepy
-          
-          # 1. Gemini 直接リクエスト
-          url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={os.environ['G_KEY']}"
-          payload = {"contents": [{"parts": [{"text": "あなたは『あくう』。遠藤ミチロウ、ビートたけし、村上春樹、太宰治の魂。成功者を冷笑する独白を日本語135字以内で。丁寧語禁止。"}]}]}
-          
-          res = requests.post(url, json=payload)
-          data = res.json()
-          
-          if "candidates" in data:
-              text = data["candidates"][0]["content"]["parts"][0]["text"].strip()[:135]
-              print(f"Generated: {text}")
-              
-              # 2. X 投稿
-              x = tweepy.Client(os.environ['X_KEY'], os.environ['X_SEC'], os.environ['X_TOK'], os.environ['X_ACC'])
-              x.create_tweet(text=text)
-              print("X Success")
-          else:
-              # ここで「なぜダメか」の真実を表示する
-              print("--- API ERROR DETAIL ---")
-              print(json.dumps(data, indent=2))
-              raise Exception("Gemini API failed")
+import os, requests, json, tweepy
+
+# 1. Gemini 直接リクエスト
+url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={os.environ['G_KEY']}"
+payload = {"contents": [{"parts": [{"text": "あなたは『あくう』。遠藤ミチロウ、ビートたけし、村上春樹、太宰治を混ぜた魂。成功者を冷笑する独白を日本語135字以内で。丁寧語禁止。"}]}]}
+
+try:
+ res = requests.post(url, json=payload)
+ data = res.json()
+ if "candidates" in data:
+  text = data["candidates"][0]["content"]["parts"][0]["text"].strip()[:135]
+  print(f"Generated: {text}")
+  # 2. X 投稿
+  x = tweepy.Client(os.environ['X_KEY'], os.environ['X_SEC'], os.environ['X_TOK'], os.environ['X_ACC'])
+  x.create_tweet(text=text)
+  print("X Success")
+ else:
+  print("--- API ERROR DETAIL ---")
+  print(json.dumps(data, indent=2))
+except Exception as e:
+ print(f"Error: {e}")
