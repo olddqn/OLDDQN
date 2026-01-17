@@ -1,33 +1,38 @@
-import os
-import requests
+import os, requests
 
-# GitHub Secretsから読み込み
 key = os.environ.get("GEMINI_API_KEY")
 
-# 【最重要】404を回避するための「黄金のURL」
-# v1beta ではなく v1 を使い、末尾の :generateContent まで正確に指定します
-url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={key}"
+# 1. 今使えるモデルの一覧をGoogleに聞き出す
+list_url = f"https://generativelanguage.googleapis.com/v1/models?key={key}"
 
-payload = {
-    "contents": [{
-        "parts": [{"text": "あなたは『あくう』。短い一言を。日本語で。"}]
-    }]
-}
-
-headers = {'Content-Type': 'application/json'}
-
-print("📡 最終接続テスト（v1/models形式）を開始...")
+print("📡 利用可能なモデルをリストアップします...")
 
 try:
-    response = requests.post(url, json=payload, headers=headers)
+    res = requests.get(list_url)
+    models_data = res.json()
     
-    if response.status_code == 200:
-        print("✅ ついに成功！！")
-        print("-" * 30)
-        print(response.json()['candidates'][0]['content']['parts'][0]['text'])
-        print("-" * 30)
+    if "models" in models_data:
+        available_models = [m["name"] for m in models_data["models"]]
+        print(f"✅ 発見！あなたが今使えるモデル一覧:\n{available_models}")
+        
+        # 2. その中から一番強そうなやつを自動で選んでテスト
+        target = ""
+        for m in ["models/gemini-1.5-flash", "models/gemini-1.0-pro", "models/gemini-pro"]:
+            if m in available_models:
+                target = m
+                break
+        
+        if target:
+            print(f"🚀 {target} で接続テストします...")
+            test_url = f"https://generativelanguage.googleapis.com/v1/{target}:generateContent?key={key}"
+            payload = {"contents": [{"parts": [{"text": "hello"}]}]}
+            test_res = requests.post(test_url, json=payload)
+            print(f"結果: {test_res.status_code}")
+            if test_res.status_code == 200:
+                print(f"回答: {test_res.json()['candidates'][0]['content']['parts'][0]['text']}")
+        else:
+            print("❌ 適切なモデルが見つかりませんでした。")
     else:
-        print(f"❌ まだ拒絶 (Status: {response.status_code})")
-        print(f"応答内容: {response.text}")
+        print(f"❌ モデル一覧が取れませんでした: {models_data}")
 except Exception as e:
-    print(f"❌ エラー発生: {e}")
+    print(f"❌ 通信エラー: {e}")
