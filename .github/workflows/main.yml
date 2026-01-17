@@ -2,41 +2,27 @@ name: Akuh Reality Erosion
 
 on:
   schedule:
-    - cron: "0 22,3,12 * * *" # 日本時間 07:00, 12:00, 21:00 に自動侵食
-  workflow_dispatch: # 手動で今すぐ侵食を開始するボタン
+    - cron: "0 22,3,12 * * *"
+  workflow_dispatch:
 
 jobs:
   erode:
     runs-on: ubuntu-latest
-    
     env:
-      # 有料枠(v1)への接続を環境レベルで強制
       GOOGLE_API_VERSION: v1
-      GOOGLE_GENAI_ENDPOINT: https://generativelanguage.googleapis.com
-      
-      # GitHubのSettingsで登録した最新の「AI Masuwo」キーを使用
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       X_API_KEY: ${{ secrets.X_API_KEY }}
       X_API_SECRET: ${{ secrets.X_API_SECRET }}
       X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
       X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
-
     steps:
-      - name: Reality Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
-      - name: Purge Cache and Awakening
+      - name: Purge and Install
         run: |
-          # 古いSDKの記憶を完全に消去
-          python -m pip install --upgrade pip
           pip cache purge
           pip install google-genai tweepy
-
-      - name: Unleash Akuh
-        # 魂のコード(synergy.py)を実行
+      - name: Unleash
         run: python synergy.py
