@@ -1,27 +1,19 @@
 import os
 import requests
 
-# 1. APIキー取得
-api_key = os.environ.get("GEMINI_API_KEY")
-
-# 2. 直接URLを指定（404を回避する最強の書き方）
-url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+# APIキーはGitHubのSecretsから自動で入ります
+key = os.environ.get("GEMINI_API_KEY")
+url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
 
 payload = {
     "contents": [{"parts": [{"text": "「あくう」として一言、短い独白を日本語で。"}]}]
 }
 
-print("📡 Geminiと通信を開始します...")
-
+print("--- 通信開始 ---")
 try:
     response = requests.post(url, json=payload)
-    data = response.json()
-    
-    if "candidates" in data:
-        print("✅ 成功！Geminiの回答:")
-        print(data["candidates"][0]["content"]["parts"][0]["text"])
-    else:
-        print("❌ エラー応答:")
-        print(data)
+    print(response.json()["candidates"][0]["content"]["parts"][0]["text"])
 except Exception as e:
-    print(f"❌ 実行エラー: {e}")
+    print(f"失敗しました: {e}")
+    # 失敗した時、何が起きたか生データを出す
+    print(response.text)
