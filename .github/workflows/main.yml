@@ -1,28 +1,25 @@
-name: Akuh Reality Erosion
-
+name: Gemini to X Bot
 on:
   schedule:
-    - cron: "0 22,3,12 * * *"
+    - cron: "0 */6 * * *" # 6時間ごと
   workflow_dispatch:
-
 jobs:
-  erode:
+  run:
     runs-on: ubuntu-latest
-    env:
-      GOOGLE_API_VERSION: v1
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      X_API_KEY: ${{ secrets.X_API_KEY }}
-      X_API_SECRET: ${{ secrets.X_API_SECRET }}
-      X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-      X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Purge and Install
+      - name: Install dependencies
         run: |
-          pip cache purge
           pip install google-genai tweepy
-      - name: Unleash
+      - name: Run bot
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
         run: python synergy.py
