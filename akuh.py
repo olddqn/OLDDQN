@@ -1,28 +1,23 @@
-import os
-import requests
+import os, requests
 
+# 新しく作ったキー（...9oFY）をGitHubに登録している前提です
 key = os.environ.get("GEMINI_API_KEY")
 
-# 試すべき「正解」の候補リスト
-models = ["gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"]
-versions = ["v1beta", "v1"]
+# URLを極限までシンプルにします（v1betaを使用）
+url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
 
-print("🔍 接続可能なモデルを探索中...")
+payload = {
+    "contents": [{"parts": [{"text": "「あくう」として一言。"}]}]
+}
 
-for v in versions:
-    for m in models:
-        url = f"https://generativelanguage.googleapis.com/{v}/models/{m}:generateContent?key={key}"
-        payload = {"contents": [{"parts": [{"text": "hello"}]}]}
-        
-        try:
-            res = requests.post(url, json=payload)
-            if res.status_code == 200:
-                print(f"✅ 発見！成功した組み合わせ: {v} / {m}")
-                print(f"回答: {res.json()['candidates'][0]['content']['parts'][0]['text']}")
-                exit(0) # 成功したら終了
-            else:
-                print(f"❌ 失敗: {v}/{m} (Status: {res.status_code})")
-        except:
-            pass
+print("📡 接続テストを開始...")
 
-print("💣 全滅しました。APIキー自体の設定を確認する必要があります。")
+res = requests.post(url, json=payload)
+
+print(f"ステータスコード: {res.status_code}")
+if res.status_code == 200:
+    print("✅ 成功！Geminiの回答:")
+    print(res.json()['candidates'][0]['content']['parts'][0]['text'])
+else:
+    print("❌ まだダメです。エラー詳細:")
+    print(res.text)
