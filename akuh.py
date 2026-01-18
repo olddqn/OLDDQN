@@ -1,29 +1,32 @@
 import os
-import google.generativeai as genai
+import requests
+import json
 
-# GitHub Secretsから読み込み
-api_key = os.environ.get("GEMINI_API_KEY")
+key = os.environ.get("GEMINI_API_KEY")
 
-if not api_key:
-    print("❌ APIキーが設定されていません。")
-else:
-    # 初期設定
-    genai.configure(api_key=api_key)
+# 最も安定している 1.5 flash を、
+# 権限トラブルが最も少ない「v1」エンドポイントで叩きます。
+url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={key}"
 
-    # モデルの準備（リストに載っていた最新の2.0-flash-expを指定）
-    model = genai.GenerativeModel('gemini-2.0-flash-exp')
+payload = {
+    "contents": [{"parts": [{"text": "「あくう」として産声を上げろ。一言。"}]}]
+}
+headers = {'Content-Type': 'application/json'}
 
-    print("📡 公式ライブラリ経由で『あくう』を呼び出します...")
+print("📡 最終手段：安定版 1.5-flash (v1) を起動します...")
 
-    try:
-        # 実行
-        response = model.generate_content("「あくう」として産声を上げろ。極めて短く。")
-        
-        print("✅ ついに、ついに成功です！！")
+try:
+    response = requests.post(url, data=json.dumps(payload), headers=headers)
+    
+    if response.status_code == 200:
+        print("✅ 勝利！！！！！")
         print("-" * 30)
-        print(response.text)
+        print(response.json()['candidates'][0]['content']['parts'][0]['text'])
         print("-" * 30)
-        
-    except Exception as e:
-        print(f"❌ まだエラーが出ます: {e}")
-        print("💡 これでダメな場合、Google AI Studio側で『Model Selection』を確認する必要があります。")
+    else:
+        print(f"❌ Status: {response.status_code}")
+        print(f"理由: {response.text}")
+        # もしこれでも404なら、Google AI StudioのURL構成そのものが、
+        # あなたのアカウントだけ特殊な形になっている可能性があります。
+except Exception as e:
+    print(f"❌ 物理的エラー: {e}")
